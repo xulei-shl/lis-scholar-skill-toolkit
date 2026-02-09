@@ -303,11 +303,11 @@ flowchart TD
 
 ```mermaid
 graph TB
-    subgraph Workflows["四大工作流"]
+    subgraph Workflows["工作流"]
         W1[LIS Journals Fetcher]
         W2[Scholar Daily Skill]
-        W3[CNKI Search Agent]
-        W4[RSS Daily Skill]
+        W3[CNKI Search Skill]
+        W4[RSS Daily Web]
     end
 
     subgraph Filters["过滤 Subagents"]
