@@ -7,6 +7,7 @@
 | 邮件发件人 | `scholaralerts-noreply@google.com` | Google Scholar Alert 发件人 |
 | 临时目录 | `{baseDir}/outputs/temps/` | 存放临时邮件和解析文件 |
 | 报告目录 | `{baseDir}/outputs/scholar-reports/` | 生成的日报存放位置 |
+| 报告同步目录 | `C:\Users\Administrator\WPSDrive\1568727350\WPS企业云盘\上海图书馆(上海科学技术情报研究所)\我的企业文档\CC-datas\gmail-daily` | 日报额外同步位置 |
 | MEMORY.md | `{baseDir}/MEMORY.md` | 用户研究兴趣配置（包含过滤规则） |
 | email_formatter | `{baseDir}/.claude/skills/scholar-daily-skill/scripts/email_formatter.py` | 邮件解析脚本 |
 

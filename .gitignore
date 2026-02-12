@@ -5,4 +5,5 @@
 # Ignore tokens and __pycache__ in any directory
 tokens/
 __pycache__/
-credentials
+credentials.json
+temps/

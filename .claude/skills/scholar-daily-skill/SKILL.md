@@ -147,6 +147,43 @@ relevant_papers.sort(key=lambda x: star_to_number(x.get("relevance_score", "★�
 
 完整模板见 [REFERENCE.md](REFERENCE.md#日报模板)。
 
+**保存路径**：
+- 主路径：`{baseDir}/outputs/scholar-reports/scholar-report-YYYY-MM-DD.md`（如冲突自动添加 `_1`, `_2` 后缀）
+- 同步路径：`C:\Users\Administrator\WPSDrive\...\gmail-daily\scholar-report-YYYY-MM-DD.md`（使用主路径的最终文件名）
+
+```python
+# 跨平台文件保存：先保存本地，再复制到同步目录
+import shutil
+from pathlib import Path
+
+def get_unique_path(filepath: Path) -> Path:
+    """如果文件已存在，添加后缀避免覆盖"""
+    if not filepath.exists():
+        return filepath
+    counter = 1
+    while True:
+        new_path = filepath.with_stem(f"{filepath.stem}_{counter}")
+        if not new_path.exists():
+            return new_path
+        counter += 1
+
+# 1. 保存到本地（自动创建目录，处理文件名冲突）
+report_dir = Path("{baseDir}") / "outputs" / "scholar-reports"
+report_dir.mkdir(parents=True, exist_ok=True)
+local_path = report_dir / f"scholar-report-{date}.md"
+unique_local_path = get_unique_path(local_path)
+# 写入日报内容到 unique_local_path
+
+# 2. 复制到同步目录（自动创建目录，处理文件名冲突）
+sync_dir = Path(r"C:\Users\Administrator\WPSDrive\1568727350\WPS企业云盘\上海图书馆(上海科学技术情报研究所)\我的企业文档\CC-datas\gmail-daily")
+sync_dir.mkdir(parents=True, exist_ok=True)
+sync_path = sync_dir / unique_local_path.name
+unique_sync_path = get_unique_path(sync_path)
+shutil.copy2(unique_local_path, unique_sync_path)
+```
+
+**错误处理**：如果同步目录不存在或复制失败，仅记录警告，不影响日报生成完成状态。
+
 ### Step 7: 删除已处理邮件
 
 ```bash
@@ -176,7 +213,8 @@ rm -rf ${temps_dir}/*
 - 相关论文: Z 篇
 
 📁 日报路径:
-outputs/scholar-reports/scholar-report-YYYY-MM-DD.md
+- 本地: outputs/scholar-reports/scholar-report-YYYY-MM-DD[_n].md
+- 同步: WPS云盘\gmail-daily\scholar-report-YYYY-MM-DD[_n].md
 ```
 
 ### 高光论文（可选）
@@ -211,7 +249,9 @@ Gmail search → 邮件 ID 列表
         ↓
 并行过滤 → Subagent 读取 .json, 返回过滤结果
         ↓
-汇总生成日报 → outputs/scholar-reports/{date}-scholar-daily.md
+汇总生成日报 → outputs/scholar-reports/scholar-report-YYYY-MM-DD.md
+        ↓
+复制日报 → WPS云盘同步目录 (gmail-daily/)
         ↓
 删除已处理邮件（移到垃圾箱）
         ↓
