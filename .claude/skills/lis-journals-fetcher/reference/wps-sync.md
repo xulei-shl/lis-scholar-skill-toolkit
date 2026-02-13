@@ -17,46 +17,29 @@
 |-----------|-------|-----------|----------|
 | 原始数据（已标注） | ❌ | `outputs/{期刊名}/{年-期}.json` | - |
 | 筛选文件 | ❌ | `outputs/{期刊名}/{年-期}-filtered.json` | - |
-| 总结报告 | ✅ | `outputs/{期刊名}/{年-期}-summary.md` | `WPS云盘/.../lis-journals/{期刊名}/{年-期}-summary.md` |
-
-## 同步路径常量
-
-```
-C:\Users\Administrator\WPSDrive\1568727350\WPS企业云盘\上海图书馆(上海科学技术情报研究所)\我的企业文档\CC-datas\lis-journals\{期刊名}\
-```
+| 总结报告 | ✅ | `outputs/{期刊名}/{年-期}-summary.md` | `CC-datas/lis-journals/{期刊名}/{年-期}-summary.md` |
 
 ## 实现逻辑
 
-```python
-import shutil
-from pathlib import Path
+使用 `wps-file-upload` skill 进行文件上传，该 skill 会自动处理：
+- 登录和 token 刷新
+- 路径解析和创建（`--create-path` 参数）
+- 文件上传和错误处理
 
-def get_unique_path(filepath: Path) -> Path:
-    """如果文件已存在，添加后缀避免覆盖"""
-    if not filepath.exists():
-        return filepath
-    counter = 1
-    while True:
-        new_path = filepath.with_stem(f"{filepath.stem}_{counter}")
-        if not new_path.exists():
-            return new_path
-        counter += 1
+```python
+from pathlib import Path
 
 # 仅同步总结报告（md 文件）
 summary_file = Path("outputs/{期刊名}/{年-期}-summary.md")
 if summary_file.exists():
-    # 同步路径
-    sync_base = Path(r"C:\Users\Administrator\WPSDrive\1568727350\WPS企业云盘\上海图书馆(上海科学技术情报研究所)\我的企业文档\CC-datas\lis-journals")
-    sync_dir = sync_base / "{期刊名}"
-    sync_dir.mkdir(parents=True, exist_ok=True)
-
-    sync_path = sync_dir / f"{年-期}-summary.md"
-    unique_sync_path = get_unique_path(sync_path)
-    try:
-        shutil.copy2(summary_file, unique_sync_path)
-    except Exception as e:
-        # 记录警告，不影响任务完成状态
-        print(f"警告: 同步文件失败 {summary_file.name}: {e}")
+    # 调用 wps-file-upload skill 上传到指定路径
+    # wps-file-upload skill 会自动处理：登录、token刷新、路径创建、文件上传、同名文件冲突
+    wps_upload_result = Skill(
+        skill="wps-file-upload",
+        args=f"--file {summary_file} --path CC-datas/lis-journals/{期刊名} --create-path"
+    )
+    # wps_upload_result 包含上传结果（文件ID、名称、大小）
+    # 如果上传失败，wps-file-upload skill 会返回错误信息，在此记录警告即可
 else:
     # 未生成总结报告，跳过同步
     print("未生成总结报告，跳过 WPS 云盘同步")
@@ -66,6 +49,11 @@ else:
 
 | 错误类型 | 处理方式 |
 |---------|---------|
-| 同步目录不存在或创建失败 | 仅记录警告 |
-| 复制失败 | 仅记录警告，不影响任务完成状态 |
-| 文件名冲突 | 自动添加 `_1`, `_2` 等后缀 |
+| Token 过期 | wps-file-upload skill 自动刷新 |
+| 同步路径不存在 | `--create-path` 参数自动创建 |
+| 文件名冲突 | wps-file-upload skill 自动处理（rename 行为） |
+| 上传失败 | 仅记录警告，不影响任务完成状态 |
+
+## 参考
+
+- [wps-file-upload skill 文档](../../wps-file-upload/SKILL.md)

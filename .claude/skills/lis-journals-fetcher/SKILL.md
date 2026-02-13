@@ -306,8 +306,26 @@ Task(
 **同步规则**：
 - 仅同步 `.md` 总结报告文件
 - JSON 文件（原始数据、筛选文件）不同步
-- 文件名冲突时自动添加 `_1`, `_2` 后缀
+- 同步使用 `wps-file-upload` skill，自动处理：登录、token 刷新、路径创建、文件上传
 - 同步失败仅记录警告，不影响任务完成状态
+
+**实现方式**：使用 Skill tool 调用 wps-file-upload skill
+
+```python
+# 仅当总结报告存在时才上传
+summary_file = Path("outputs/{期刊名}/{年-期}-summary.md")
+if summary_file.exists():
+    # 调用 wps-file-upload skill 上传到指定路径
+    wps_upload_result = Skill(
+        skill="wps-file-upload",
+        args=f"--file {summary_file} --path CC-datas/lis-journals/{期刊名} --create-path"
+    )
+    # wps_upload_result 包含上传结果（文件ID、名称、大小）
+    # 如果上传失败，wps-file-upload skill 会返回错误信息，在此记录警告即可
+else:
+    # 未生成总结报告，跳过同步
+    print("未生成总结报告，跳过 WPS 云盘同步")
+```
 
 ### 步骤 11：显示结果总结
 
@@ -338,7 +356,7 @@ Task(
   • outputs/中国图书馆学报/2025-5-summary.md (总结报告)
 
 📁 同步文件:
-  • WPS云盘/.../lis-journals/中国图书馆学报/2025-5-summary.md
+  • WPS云盘: CC-datas/lis-journals/中国图书馆学报/2025-5-summary.md (文件ID: {id}, 大小: {size} 字节)
 ```
 
 **无总结报告时**：
@@ -413,7 +431,7 @@ Task(
 | 年期推荐策略 | `{baseDir}/.claude/skills/lis-journals-fetcher/reference/period-recommendation.md` |
 | 筛选脚本路径 | `{baseDir}/.claude/skills/lis-journals-fetcher/scripts/filter_papers.py` |
 | 结果输出路径 | `{baseDir}/outputs/{期刊名}/{年-期}.json` |
-| 同步路径 | `C:\Users\Administrator\WPSDrive\1568727350\WPS企业云盘\上海图书馆(上海科学技术情报研究所)\我的企业文档\CC-datas\lis-journals\{期刊名}\` |
+| WPS 同步路径 | `CC-datas/lis-journals/{期刊名}/` （通过 wps-file-upload skill 自动处理） |
 | 超时时间 | 120000ms (2分钟) |
 
 ## 扩展性
