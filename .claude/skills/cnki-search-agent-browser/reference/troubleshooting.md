@@ -17,6 +17,78 @@
 
 ## 按错误类型排查
 
+### 0. Daemon 启动失败（Windows 环境）
+
+#### 错误：`Daemon failed to start (socket: ...)`
+
+**现象**：
+```
+✗ Daemon failed to start (socket: C:\Users\Username\.agent-browser\cnki-test.sock)
+```
+
+**原因分析**：
+- Windows 环境下 Unix socket 文件路径兼容性问题
+- 端口被占用或残留锁文件
+- agent-browser daemon 进程异常
+
+**解决方案（按优先级排序）**：
+
+##### 方案 A：使用 CDP 端口连接（推荐）
+
+绕过 daemon，直接连接到已运行的 Chrome DevTools Protocol 实例：
+
+```bash
+# 1. 先手动启动 Chrome 并开启远程调试
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
+
+# 2. 脚本中使用 --cdp 参数连接
+npx agent-browser --cdp 9222 --session cnki --headed open https://chn.oversea.cnki.net
+```
+
+##### 方案 B：清理残留文件后重试
+
+```bash
+# 清理可能的残留锁文件和 socket
+rm -f "$HOME/.agent-browser/"*.sock
+rm -f "$HOME/.agent-browser/"*.pid
+
+# 重新启动
+npx agent-browser --session cnki --headed open https://chn.oversea.cnki.net
+```
+
+##### 方案 C：使用 connect 命令连接现有浏览器
+
+```bash
+# 如果已有浏览器在运行，使用 connect 命令
+npx agent-browser connect 9222
+```
+
+##### 方案 D：检查和终止残留进程
+
+```bash
+# Windows 下查找并终止残留进程
+tasklist | findstr chrome
+taskkill /F /IM chrome.exe
+
+# 然后重新启动
+npx agent-browser --session cnki --headed open https://chn.oversea.cnki.net
+```
+
+**环境变量配置**（提升稳定性）：
+
+```bash
+# 指定 agent-browser 安装路径
+export AGENT_BROWSER_HOME="$HOME/.agent-browser"
+
+# 设置默认会话名
+export AGENT_BROWSER_SESSION="cnki"
+
+# 指定 Chrome 可执行文件路径
+export AGENT_BROWSER_EXECUTABLE_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"
+```
+
+---
+
 ### 1. 浏览器相关问题
 
 #### 错误：`npx: command not found` 或 `agent-browser: command not found`

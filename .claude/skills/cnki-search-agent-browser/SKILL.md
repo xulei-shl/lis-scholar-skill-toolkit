@@ -12,7 +12,7 @@ allowed-tools: "Read, Edit, Write, Bash, Glob, Grep, AskUserQuestion, Task"
 
 | 组件 | 类型 | 角色 | 文件位置 |
 |------|------|------|----------|
-| `agent-browser` | Skill/MCP | 浏览器自动化工具 | 系统 MCP 工具 |
+| `agent-browser` | Skill | 浏览器自动化工具 | `.claude\skills\agent-browser\SKILL.md` |
 | `cnki-*.sh` | Script | CNKI 操作脚本 | `{baseDir}/scripts/` |
 | `wps-file-upload` | Skill | WPS 云盘上传 | `.claude/skills/wps-file-upload/SKILL.md` |
 
@@ -145,10 +145,49 @@ flowchart TD
 
 **执行逻辑**：根据检索条件调用对应的自动化脚本，脚本会处理浏览器交互、结果提取、翻页等复杂操作。脚本执行期间保持浏览器会话打开，便于后续延续爬取。
 
+**执行前预检查**（推荐）：
+
+```bash
+# 1. 检查 agent-browser 版本
+npx agent-browser --version
+
+# 2. 检查是否有残留会话
+npx agent-browser session list
+
+# 3. 清理残留会话（如存在）
+npx agent-browser --session cnki close 2>/dev/null || true
+npx agent-browser --session cnki-adv close 2>/dev/null || true
+
+# 4. 检查环境变量（Windows 特别注意）
+echo $AGENT_BROWSER_HOME  # 应显示有效的路径
+```
+
 **异常处理**：
 - 脚本执行失败 → [故障排查指南](reference/troubleshooting.md)
 - 参数错误 → [脚本文档](reference/scripts.md)
 - 元素定位问题 → [手动操作参考](reference/manual-operations.md)
+- **Daemon 启动失败** → 使用以下备选方案：
+
+#### 备选方案 A：使用 CDP 连接
+
+```bash
+# 1. 手动启动 Chrome（远程调试模式）
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
+
+# 2. 修改脚本命令，添加 --cdp 参数
+cd {baseDir}/scripts
+bash cnki-search.sh "关键词" 15 {projectRoot}/outputs/cnki-search --cdp 9222
+```
+
+#### 备选方案 B：连接现有浏览器
+
+```bash
+# 1. 使用 connect 命令代替 open
+npx agent-browser connect 9222
+
+# 2. 检查连接状态
+npx agent-browser session list
+```
 
 **脚本调用**（详细参数说明见 [脚本文档](reference/scripts.md)）：
 
@@ -186,6 +225,7 @@ bash cnki-search.sh "关键词" 15 {projectRoot}/outputs/cnki-search
 脚本执行完成后，会将结果保存到 `{projectRoot}/outputs/cnki-search/` 目录：
 
 **输出文件格式**：
+
 - `{keyword}_{timestamp}.json` - JSON 格式数据（程序处理用）
 - `{keyword}_{timestamp}.md` - Markdown 格式报告（人工查看用）
 
@@ -223,10 +263,12 @@ if md_files:
 **如需继续爬取**：使用当前会话，继续调用 `cnki-crawl.sh` 脚本延续爬取。
 
 **职责分工**：
+
 - **Skill 层（大模型）**：理解用户意图、读取状态文件、计算目标参数
 - **脚本层（执行）**：跳转到指定页、跳过指定条数、提取数据、输出状态
 
 **状态文件位置说明**：
+
 - 状态文件位于 `{projectRoot}/outputs/.cnki_state.json`
 - 使用 `Bash cat {projectRoot}/outputs/.cnki_state.json` 读取
 
@@ -282,16 +324,75 @@ bash cnki-crawl.sh cnki {projectRoot}/outputs/cnki-search "关键词" \
 
 **执行逻辑**：用户确认不再需要继续爬取后，关闭浏览器会话释放资源，清理临时状态文件，并简要总结此次爬取任务。
 
-**关闭会话**：
-```bash
-npx agent-browser --session cnki close 2>/dev/null || true
+**关闭会话前检查**（增强版）：
 
+```bash
+# 1. 检查活动会话列表
+npx agent-browser session list
+
+# 2. 根据结果关闭对应会话
+npx agent-browser --session cnki close 2>/dev/null || true
 npx agent-browser --session cnki-adv close 2>/dev/null || true
+
+# 3. 等待进程完全退出（可选但推荐）
+sleep 2
+
+# 4. 验证会话已关闭
+npx agent-browser session list
 ```
 
 **清理临时文件**：
+
 ```bash
+# 清理状态文件
 rm -f "{projectRoot}/outputs/.cnki_state.json" 2>/dev/null || true
+
+# 清理残留的 socket 文件（Windows 兼容）
+rm -f "$HOME/.agent-browser/"*.sock 2>/dev/null || true
+rm -f "$HOME/.agent-browser/"*.pid 2>/dev/null || true
+```
+
+**清理失败时的备选方案**：
+
+```bash
+# 如果正常关闭失败，使用环境变量指定位置后重试
+AGENT_BROWSER_HOME="$HOME/.agent-browser" npx agent-browser --session cnki close
+
+# 或直接查找并终止残留进程（最后手段）
+taskkill /F /IM chrome.exe 2>/dev/null || true
+```
+
+---
+
+# 环境配置与故障排查
+
+## 环境变量（可选）
+
+| 变量 | 用途 | 示例 |
+|------|------|------|
+| `AGENT_BROWSER_HOME` | 指定 agent-browser 路径 | `C:\Users\Username\.agent-browser` |
+| `AGENT_BROWSER_SESSION` | 设置默认会话名 | `cnki` |
+| `AGENT_BROWSER_EXECUTABLE_PATH` | 自定义 Chrome 路径 | `C:\Program Files\...\chrome.exe` |
+
+### 常见问题快速索引
+
+| 问题 | 快速方案 | 详细文档 |
+|------|----------|----------|
+| Daemon 启动失败 | 使用 `--cdp 9222` 或清理残留文件 | [troubleshooting.md - Daemon故障](reference/troubleshooting.md#0-daemon-启动失败windows-环境) |
+| 元素定位失败 | 使用 `snapshot -i` 获取最新 ref | [troubleshooting.md - 元素定位](reference/troubleshooting.md#2-元素定位问题) |
+| 翻页操作无效 | 使用 `snapshot + click` 代替 `eval` | [troubleshooting.md - 翻页问题](reference/troubleshooting.md#3-翻页操作问题) |
+| 检索等待超时 | 使用 `sleep + grep` 循环检测 | [troubleshooting.md - 检索问题](reference/troubleshooting.md#4-检索结果问题) |
+
+**调试命令**：
+```bash
+# 检查会话状态
+npx agent-browser session list
+
+# 查看控制台日志
+npx agent-browser --session cnki --headed console
+
+# 截图调试
+npx agent-browser --session cnki --headed screenshot debug.png
 ```
 
 ---
