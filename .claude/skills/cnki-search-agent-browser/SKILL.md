@@ -6,6 +6,27 @@ allowed-tools: "Read, Edit, Write, Bash, Glob, Grep, AskUserQuestion, Task"
 
 # CNKI 技能主流程
 
+作为**主智能体（指挥官）**，协调浏览器自动化、结果提取、文件保存和 WPS 云盘上传。
+
+## 涉及的组件
+
+| 组件 | 类型 | 角色 | 文件位置 |
+|------|------|------|----------|
+| `agent-browser` | Skill/MCP | 浏览器自动化工具 | 系统 MCP 工具 |
+| `cnki-*.sh` | Script | CNKI 操作脚本 | `{baseDir}/scripts/` |
+| `wps-file-upload` | Skill | WPS 云盘上传 | `.claude/skills/wps-file-upload/SKILL.md` |
+
+## 输出路径规范
+
+| 输出类型 | 路径 | 说明 |
+|----------|------|------|
+| 检索结果 | `{projectRoot}/outputs/cnki-search/` | JSON + Markdown 格式 |
+| WPS 云盘 | `CC-datas/cnki-search/` | 自动上传同步 |
+
+**路径变量说明**：
+- `{baseDir}` = 当前技能目录 = `.claude/skills/cnki-search-agent-browser/`
+- `{projectRoot}` = 项目根目录 = `f:\Github\lis-scholar-skill-toolkit/`
+
 ```mermaid
 flowchart TD
     Start([用户触发检索意图]) --> Detect{检测用户表达}
@@ -138,11 +159,11 @@ flowchart TD
 
 **完整调用示例**（需 cd 到脚本目录）：
 ```bash
-cd {baseDir}/.claude/skills/cnki-search-agent-browser
-bash scripts/cnki-search.sh "关键词" 15 {baseDir}/outputs
+cd {baseDir}/scripts
+bash cnki-search.sh "关键词" 15 {projectRoot}/outputs/cnki-search
 ```
 
-**完成后展示结果摘要**，
+**完成后展示结果摘要**：
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -153,7 +174,48 @@ bash scripts/cnki-search.sh "关键词" 15 {baseDir}/outputs
 本次爬取: XX 篇
 未爬取: XXXX 篇
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 输出文件:
+- 本地: outputs/cnki-search/{keyword}_{timestamp}.json
+- 本地: outputs/cnki-search/{keyword}_{timestamp}.md
+- WPS云盘: CC-datas/cnki-search/{filename}.md (文件ID: {id}, 大小: {size} 字节)
 ```
+
+### 结果文件处理
+
+脚本执行完成后，会将结果保存到 `{projectRoot}/outputs/cnki-search/` 目录：
+
+**输出文件格式**：
+- `{keyword}_{timestamp}.json` - JSON 格式数据（程序处理用）
+- `{keyword}_{timestamp}.md` - Markdown 格式报告（人工查看用）
+
+**自动上传到 WPS 云盘**：
+
+使用 `wps-file-upload` skill 自动将 Markdown 报告上传到 `CC-datas/cnki-search/` 路径：
+
+```python
+from pathlib import Path
+
+# 输出目录配置
+output_dir = Path("{projectRoot}") / "outputs" / "cnki-search"
+output_dir.mkdir(parents=True, exist_ok=True)
+
+# 获取脚本输出的 Markdown 文件（匹配关键词和时间戳）
+md_files = list(output_dir.glob(f"{keyword}_*.md"))
+if md_files:
+    latest_md = max(md_files, key=lambda p: p.stat().st_mtime)
+
+    # 调用 wps-file-upload skill 上传
+    wps_upload_result = Skill(
+        skill="wps-file-upload",
+        args=f"--file {latest_md} --path CC-datas/cnki-search --create-path"
+    )
+
+    # 上传结果包含文件ID、名称、大小等信息
+```
+
+**错误处理**：如果 WPS 上传失败，仅记录警告，不影响检索任务完成状态。本地文件始终保存成功。
+
 如果还有未爬取的文献，执行步骤 5 询问用户是否继续爬取。否则，执行步骤 6 结束任务。
 
 ### 步骤5：使用 AskUserQuestion 询问是否继续爬取剩余文献
@@ -165,8 +227,8 @@ bash scripts/cnki-search.sh "关键词" 15 {baseDir}/outputs
 - **脚本层（执行）**：跳转到指定页、跳过指定条数、提取数据、输出状态
 
 **状态文件位置说明**：
-- 状态文件位于 `{baseDir}/outputs/.cnki_state.json`（项目根目录的 outputs/）
-- 使用 `Bash cat {baseDir}/outputs/.cnki_state.json` 读取
+- 状态文件位于 `{projectRoot}/outputs/.cnki_state.json`
+- 使用 `Bash cat {projectRoot}/outputs/.cnki_state.json` 读取
 
 **状态文件格式**：
 ```json
@@ -182,7 +244,7 @@ bash scripts/cnki-search.sh "关键词" 15 {baseDir}/outputs
 **参数计算逻辑**（从状态文件读取）：
 ```bash
 # 1. 使用 Bash 工具读取状态文件
-Bash cat {baseDir}/outputs/.cnki_state.json
+Bash cat {projectRoot}/outputs/.cnki_state.json
 
 # 2. 从输出中提取必要信息
 EXISTING_COUNT=10   # 从 .total_collected 获取
@@ -206,8 +268,8 @@ START_IDX=$((EXISTING_COUNT + 1))                      # 11
 # 已爬取10篇，每页20条，继续爬30篇
 # Skill 从状态文件读取: total_collected=10, current_page=1, items_per_page=20
 # Skill 计算: target_page=1, skip_in_page=10, start_idx=11
-cd {baseDir}/.claude/skills/cnki-search-agent-browser
-bash scripts/cnki-crawl.sh cnki {baseDir}/outputs "关键词" \
+cd {baseDir}/scripts
+bash cnki-crawl.sh cnki {projectRoot}/outputs/cnki-search "关键词" \
   --target-page 1 \
   --skip-in-page 10 \
   --count 30 \
@@ -229,7 +291,7 @@ npx agent-browser --session cnki-adv close 2>/dev/null || true
 
 **清理临时文件**：
 ```bash
-rm -f "{baseDir}/outputs/.cnki_state.json" 2>/dev/null || true
+rm -f "{projectRoot}/outputs/.cnki_state.json" 2>/dev/null || true
 ```
 
 ---

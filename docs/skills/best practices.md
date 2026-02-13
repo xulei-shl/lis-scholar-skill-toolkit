@@ -58,6 +58,31 @@ description: "功能描述，使用时机"  # 必需，1024字符内，第三人
 - **路径规范**：使用 `{baseDir}` 和正斜杠，如 `Read {baseDir}/config.json`
 - **渐进披露**：详细文档通过引用加载，保持 SKILL.md 简洁
 
+### 路径定义规范（重要）
+
+| 变量 | 定义 | 示例展开 |
+|------|------|----------|
+| `{baseDir}` | 当前技能的根目录 | `.claude/skills/my-skill/` |
+| `{projectRoot}` | 项目根目录 | `e:\Desk\my-project/` |
+
+**使用规则**：
+- 技能内的脚本、配置 → 使用 `{baseDir}`
+- 项目共享资源、输出 → 使用 `{projectRoot}`
+- 避免使用 `../` 相对路径，降低理解成本
+
+```bash
+# 技能内脚本
+python {baseDir}/scripts/helper.py --save
+# → .claude/skills/my-skill/scripts/helper.py
+
+# 项目共享脚本
+python {projectRoot}/shared-scripts/common.py
+# → e:\Desk\my-project/shared-scripts/common.py
+
+# 输出到项目目录
+python {baseDir}/scripts/process.py --output {projectRoot}/outputs
+```
+
 ---
 
 ## 3. 核心原则
