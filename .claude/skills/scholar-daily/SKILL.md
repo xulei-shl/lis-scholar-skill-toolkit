@@ -1,5 +1,5 @@
 ---
-name: scholar-daily-skill
+name: scholar-daily
 description: "自动处理 Google Scholar Alerts 邮件,基于 MEMORY.md 过滤论文,生成 Markdown 日报。使用场景:用户说'生成scholar日报'、'处理scholar邮件'、'今天的scholar日报',或使用/scholar-daily命令。"
 allowed-tools: "Read, Write, Bash, Skill, Task, AskUserQuestion"
 ---
@@ -15,6 +15,7 @@ allowed-tools: "Read, Write, Bash, Skill, Task, AskUserQuestion"
 | `gmail-skill` | Skill | Gmail 访问工具 | `.claude/skills/gmail-skill/SKILL.md` |
 | `scholar-email-processor` | Subagent | 邮件过滤专家 | `.claude/agents/scholar-email-processor.md` |
 | `email_formatter.py` | Script | 邮件解析工具 | `.claude/skills/scholar-daily-skill/scripts/email_formatter.py` |
+| `wps-upload` | Skill | WPS 云盘上传 | `.claude/skills/wps-upload/SKILL.md` |
 
 ## 快速开始
 
@@ -30,13 +31,15 @@ allowed-tools: "Read, Write, Bash, Skill, Task, AskUserQuestion"
 
 | 组件 | 职责 | 读取文件 |
 |------|------|----------|
-| **主流程** | 编排任务、汇总结果、生成日报 | 仅读取子代理返回的 JSON 结果 |
+| **主流程** | 编排任务、汇总结果、生成日报、调用 WPS 上传 | 仅读取子代理返回的 JSON 结果 |
 | **Subagent** | 读取论文数据、读取研究兴趣、语义过滤 | `papers_*.json` + `MEMORY.md` |
+| **wps-upload skill** | 上传日报到 WPS 云盘（含登录、token 刷新、路径处理） | 通过 Skill tool 调用，独立处理上传逻辑 |
 
 **关键原则**：
 - ✅ 主流程**不读取** `MEMORY.md` - 避免冗余和上下文浪费
 - ✅ 子代理自主读取 `MEMORY.md` - 每个过滤任务独立完成
 - ✅ 主流程只汇总子代理返回的 JSON 结果 - 保持简洁
+- ✅ WPS 上传通过 Skill tool 调用，保持职责分离和封装性
 
 ## 工作流
 
@@ -149,11 +152,10 @@ relevant_papers.sort(key=lambda x: star_to_number(x.get("relevance_score", "★�
 
 **保存路径**：
 - 主路径：`{baseDir}/outputs/scholar-reports/scholar-report-YYYY-MM-DD.md`（如冲突自动添加 `_1`, `_2` 后缀）
-- 同步路径：`C:\Users\Administrator\WPSDrive\...\gmail-daily\scholar-report-YYYY-MM-DD.md`（使用主路径的最终文件名）
+- WPS 云盘：上传到 `CC-datas/gmail-daily/` 目录（使用 wps-upload skill）
 
 ```python
-# 跨平台文件保存：先保存本地，再复制到同步目录
-import shutil
+# 跨平台文件保存：先保存本地，再上传到 WPS 云盘
 from pathlib import Path
 
 def get_unique_path(filepath: Path) -> Path:
@@ -174,15 +176,18 @@ local_path = report_dir / f"scholar-report-{date}.md"
 unique_local_path = get_unique_path(local_path)
 # 写入日报内容到 unique_local_path
 
-# 2. 复制到同步目录（自动创建目录，处理文件名冲突）
-sync_dir = Path(r"C:\Users\Administrator\WPSDrive\1568727350\WPS企业云盘\上海图书馆(上海科学技术情报研究所)\我的企业文档\CC-datas\gmail-daily")
-sync_dir.mkdir(parents=True, exist_ok=True)
-sync_path = sync_dir / unique_local_path.name
-unique_sync_path = get_unique_path(sync_path)
-shutil.copy2(unique_local_path, unique_sync_path)
+# 2. 上传到 WPS 云盘（使用 Skill tool 调用 wps-upload skill）
+# wps-upload skill 会自动处理：登录、token刷新、路径创建、文件上传
+wps_upload_result = Skill(
+    skill="wps-file-upload",
+    args=f"--file {unique_local_path} --path CC-datas/gmail-daily --create-path"
+)
+
+# wps_upload_result 包含上传结果（文件ID、名称、大小）
+# 如果上传失败，wps-upload skill 会返回错误信息，在此记录警告即可
 ```
 
-**错误处理**：如果同步目录不存在或复制失败，仅记录警告，不影响日报生成完成状态。
+**错误处理**：如果 WPS 上传失败，仅记录警告，不影响日报生成完成状态。本地文件始终保存成功。
 
 ### Step 7: 删除已处理邮件
 
@@ -214,7 +219,14 @@ rm -rf ${temps_dir}/*
 
 📁 日报路径:
 - 本地: outputs/scholar-reports/scholar-report-YYYY-MM-DD[_n].md
-- 同步: WPS云盘\gmail-daily\scholar-report-YYYY-MM-DD[_n].md
+- WPS云盘: CC-datas/gmail-daily/{文件名} (文件ID: {id}, 大小: {size} 字节)
+```
+
+上传失败时：
+```
+📁 日报路径:
+- 本地: outputs/scholar-reports/scholar-report-YYYY-MM-DD[_n].md
+- WPS云盘: 上传失败 - {错误原因}
 ```
 
 ### 高光论文（可选）
@@ -251,7 +263,7 @@ Gmail search → 邮件 ID 列表
         ↓
 汇总生成日报 → outputs/scholar-reports/scholar-report-YYYY-MM-DD.md
         ↓
-复制日报 → WPS云盘同步目录 (gmail-daily/)
+上传日报到 WPS 云盘 (wps-upload skill)
         ↓
 删除已处理邮件（移到垃圾箱）
         ↓
