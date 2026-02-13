@@ -1,9 +1,24 @@
 # Environment variables
 .env
 .env.local
+venv/
+env/
+ENV/
 
-# Ignore tokens and __pycache__ in any directory
+# Token 文件
+wps_token.json
+token.json
 tokens/
-__pycache__/
 credentials.json
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+
+
 temps/
+
