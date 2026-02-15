@@ -43,45 +43,56 @@ allowed-tools: "Read, Write, Bash, Skill, Task, AskUserQuestion"
 
 ## 工作流
 
-### Step 1: 解析日期并搜索邮件
+### Step 1: 解析日期并搜索邮件（⚠️ 强制：必须使用代理）
 
 ```bash
+# 强制规则：所有 Gmail API 调用必须通过代理（如 Clash Premium）
+export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890
+
 # 优先方案：使用 --date-range 参数（推荐）
 # 该参数自动将日期转换为 Unix 时间戳，避免 PST 时区问题
 # 注意：限定只搜索 Inbox 中的邮件
 target_date="2026-02-04"
-result=$(python .claude/skills/gmail-skill/scripts/gmail_skill.py search \
+result=$(python3 .claude/skills/gmail-skill/scripts/gmail_skill.py search \
     "in:inbox from:scholaralerts-noreply@google.com" \
-    --date-range "$target_date")
+    --date-range "$target_date" \
+    --account wzjlxy@gmail.com)
 
 # 降级方案：如果当天无邮件，查询最新 6 封
 if [ "$(echo $result | jq '.total')" -eq 0 ]; then
-    result=$(python .claude/skills/gmail-skill/scripts/gmail_skill.py search \
-        "in:inbox from:scholaralerts-noreply@google.com" \
-        --max-results 6)
+    result=$(python3 .claude/skills/gmail-skill/scripts/gmail_skill.py search \
+        "from:scholaralerts-noreply@google.com" \
+        --max-results 6 \
+        --account wzjlxy@gmail.com)
 fi
 ```
 
-### Step 2: 并行读取邮件（单条消息）
+**关键说明**：
+- ⚠️ **必须使用代理**：国内环境无法直接访问 `www.googleapis.com`，必须设置 `https_proxy` 和 `http_proxy`
+- ⚠️ **必须使用 python3**：脚本需要 Python 3 运行
+- ⚠️ **必须指定账户**：使用 `--account` 参数指定 Gmail 账户，避免认证错误
+
+### Step 2: 并行读取邮件（⚠️ 强制：必须使用代理 + python3）
 
 ```bash
 # 使用 --output 参数直接保存到 temps 目录
 {baseDir}="项目根目录"
 temps_dir="{baseDir}/outputs/temps"
 
-# 在单条响应中并行调用多个 Bash
-Bash(command=f"python ... read {id1} --output {temps_dir}/email_{id1}.json")
-Bash(command=f"python ... read {id2} --output {temps_dir}/email_{id2}.json")
-# ... 所有邮件
+# 强制规则：每个 gmail_skill.py 调用都必须包含代理设置和 --account 参数
+Bash(command=f"export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 && python3 .claude/skills/gmail-skill/scripts/gmail_skill.py read {id1} --account wzjlxy@gmail.com --output {temps_dir}/email_{id1}.json")
+Bash(command=f"export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 && python3 .claude/skills/gmail-skill/scripts/gmail_skill.py read {id2} --account wzjlxy@gmail.com --output {temps_dir}/email_{id2}.json")
+# ... 所有邮件（在同一消息中并行调用）
 ```
 
-### Step 3: 并行解析论文（单条消息）
+### Step 3: 并行解析论文（⚠️ 强制：必须使用 python3 + 正确路径）
 
 ```bash
 # 并行调用 email_formatter.py
-Bash(command=f"python ... email_formatter.py {temps_dir}/email_{id1}.json --output {temps_dir}/papers_{id1}.md --json-output {temps_dir}/papers_{id1}.json")
-Bash(command=f"python ... email_formatter.py {temps_dir}/email_{id2}.json --output {temps_dir}/papers_{id2}.md --json-output {temps_dir}/papers_{id2}.json")
-# ... 所有邮件
+# 注意：email_formatter.py 位于 scholar-daily/scripts/ 目录，不是 gmail-skill/scripts/
+Bash(command=f"python3 .claude/skills/scholar-daily/scripts/email_formatter.py {temps_dir}/email_{id1}.json --output {temps_dir}/papers_{id1}.md --json-output {temps_dir}/papers_{id1}.json")
+Bash(command=f"python3 .claude/skills/scholar-daily/scripts/email_formatter.py {temps_dir}/email_{id2}.json --output {temps_dir}/papers_{id2}.md --json-output {temps_dir}/papers_{id2}.json")
+# ... 所有邮件（在同一消息中并行调用）
 ```
 
 **输出文件**：
@@ -189,11 +200,13 @@ wps_upload_result = Skill(
 
 **错误处理**：如果 WPS 上传失败，仅记录警告，不影响日报生成完成状态。本地文件始终保存成功。
 
-### Step 7: 删除已处理邮件
+### Step 7: 删除已处理邮件（⚠️ 强制：必须使用代理 + python3）
 
 ```bash
 # 批量删除（使用逗号分隔多个 ID）
-python .claude/skills/gmail-skill/scripts/gmail_skill.py trash "id1,id2,id3,id4"
+# 强制规则：必须包含代理设置、--account 参数
+export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890
+python3 .claude/skills/gmail-skill/scripts/gmail_skill.py trash "id1,id2,id3,id4" --account wzjlxy@gmail.com
 ```
 
 **错误处理**：删除失败仅记录警告，不影响日报生成完成状态。

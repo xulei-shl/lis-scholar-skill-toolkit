@@ -12,6 +12,7 @@
 | 检索无结果 | 关键词格式问题 | 检查关键词是否包含特殊字符 |
 | 浏览器启动失败 | agent-browser 未安装 | `npm install -g agent-browser` |
 | jq 命令不存在 | jq 未安装 | 参考下方 [依赖安装](#依赖安装) |
+| **Missing X server** | **Linux 无图形界面环境** | **使用 xvfb-run（见下方）** |
 
 ---
 
@@ -85,6 +86,85 @@ export AGENT_BROWSER_SESSION="cnki"
 
 # 指定 Chrome 可执行文件路径
 export AGENT_BROWSER_EXECUTABLE_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"
+```
+
+---
+
+### 0.5. Linux 无图形界面环境（服务器环境）
+
+#### 错误：`Missing X server or $DISPLAY`
+
+**现象**：
+```
+ERROR:ui/ozone/platform/x11/ozone_platform_x11.cc:256] Missing X server or $DISPLAY
+ERROR:ui/aura/env.cc:246] The platform failed to initialize. Exiting.
+```
+
+**原因分析**：
+- Linux 服务器环境没有图形界面（X Server）
+- `agent-browser` 的 `--headed` 模式需要图形环境
+- CNKI 检测无头模式，必须使用有头模式
+
+**解决方案（按优先级排序）**：
+
+##### 方案 A：使用 xvfb-run（推荐）
+
+Xvfb（X Virtual Framebuffer）提供虚拟显示环境：
+
+```bash
+# 1. 检查并安装 xvfb
+sudo apt install -y xvfb
+
+# 2. 使用 xvfb-run 包装脚本执行
+xvfb-run -a bash cnki-adv-search.sh "AI 伦理" -s 2022 -e 2025 -c -n 20
+
+# 参数说明：
+# -a: 自动选择可用的 display 编号
+```
+
+**xvfb-run 的优势**：
+- 无需修改原有脚本
+- 自动管理虚拟显示环境
+- 适合 CI/CD 和服务器环境
+
+##### 方案 B：启动 Xvfb 服务后手动执行
+
+```bash
+# 1. 启动 Xvfb 服务（display :99）
+Xvfb :99 -screen 0 1920x1080x24 &
+export DISPLAY=:99
+
+# 2. 执行脚本
+bash cnki-adv-search.sh "关键词" -s 2022 -e 2025 -c -n 20
+
+# 3. 清理
+killall Xvfb
+```
+
+##### 方案 C：自动化脚本（集成到环境检测）
+
+在执行脚本前添加环境检测：
+
+```bash
+# 检测是否为无图形界面环境
+if [[ "$OSTYPE" == "linux-gnu"* ]] && ! xhost > /dev/null 2>&1; then
+    echo "⚠️  检测到无图形界面环境"
+    if ! command -v xvfb-run &> /dev/null; then
+        sudo apt install -y xvfb
+    fi
+    xvfb-run -a bash cnki-adv-search.sh "$@"
+else
+    bash cnki-adv-search.sh "$@"
+fi
+```
+
+**验证 xvfb 是否工作**：
+```bash
+# 测试 xvfb 是否正常
+xvfb-run -a echo "Xvfb 工作正常"
+
+# 测试浏览器启动
+xvfb-run -a npx agent-browser --session test --headed open https://www.baidu.com
 ```
 
 ---

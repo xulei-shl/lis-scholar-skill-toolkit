@@ -160,6 +160,16 @@ npx agent-browser --session cnki-adv close 2>/dev/null || true
 
 # 4. 检查环境变量（Windows 特别注意）
 echo $AGENT_BROWSER_HOME  # 应显示有效的路径
+
+# 5. 检查是否为 Linux 无图形界面环境（重要！）
+if [[ "$OSTYPE" == "linux-gnu"* ]] && ! xhost > /dev/null 2>&1; then
+    echo "⚠️  检测到无图形界面环境，需要使用 xvfb-run"
+    if ! command -v xvfb-run &> /dev/null; then
+        echo "正在安装 xvfb..."
+        sudo apt install -y xvfb
+    fi
+    export USE_XVFB=true
+fi
 ```
 
 **异常处理**：
@@ -197,7 +207,30 @@ npx agent-browser session list
 | 高级检索 | `cnki-adv-search.sh` | `cnki-adv-search.sh <keyword> [-s start] [-e end] [-c] [-n count]` |
 
 **完整调用示例**（需 cd 到脚本目录）：
+
+##### 方式 1：使用环境自适应包装脚本（推荐）
+
 ```bash
+cd {baseDir}/scripts
+# 包装脚本会自动检测环境并选择合适的执行方式
+bash cnki-search-wrapper.sh cnki-search.sh "关键词" 15
+bash cnki-search-wrapper.sh cnki-adv-search.sh "AI 伦理" -s 2022 -e 2025 -c -n 20
+```
+
+**优势**：
+- 自动检测是否有图形界面
+- Linux 无 GUI 环境自动使用 xvfb-run
+- Windows/macOS/Linux Desktop 环境直接执行
+- 无需手动判断环境
+
+##### 方式 2：直接调用脚本
+
+```bash
+# Linux 无图形界面环境（手动使用 xvfb-run）
+cd {baseDir}/scripts
+xvfb-run -a bash cnki-search.sh "关键词" 15 {projectRoot}/outputs/cnki-search
+
+# 有图形界面环境（Windows/macOS/Linux Desktop）
 cd {baseDir}/scripts
 bash cnki-search.sh "关键词" 15 {projectRoot}/outputs/cnki-search
 ```
