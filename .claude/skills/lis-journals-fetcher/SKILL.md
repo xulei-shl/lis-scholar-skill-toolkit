@@ -110,7 +110,7 @@ MEMORY.md 更新（条件触发）
 
 #### 步骤 1：读取期刊类型配置
 
-读取 `{baseDir}/.claude/skills/cnki-journals-fetcher/reference/journal-types-config.md`
+读取 `$CLAUDE_PROJECT_DIR/.claude/skills/lis-journals-fetcher/reference/journal-types-config.md`
 
 #### 步骤 2：期刊类型识别与选择
 
@@ -119,7 +119,7 @@ MEMORY.md 更新（条件触发）
 ```python
 Grep(
     pattern=期刊名,
-    path="{baseDir}/.claude/skills/cnki-journals-fetcher/reference/journals-list",
+    path="$CLAUDE_PROJECT_DIR/.claude/skills/lis-journals-fetcher/reference/journals-list",
     glob="*.md",
     output_mode="files_with_matches"
 )
@@ -261,7 +261,7 @@ Task(
 调用 filter_papers.py 脚本生成独立的筛选文件。
 
 ```bash
-python {baseDir}/.claude/skills/cnki-journals-fetcher/scripts/filter_papers.py \
+python $CLAUDE_PROJECT_DIR/.claude/skills/lis-journals-fetcher/scripts/filter_papers.py \
   -i outputs/{期刊名}/{年-期}.json
 ```
 
@@ -416,7 +416,7 @@ else:
 
 | 错误类型 | 处理方式 |
 |----------|----------|
-| 期刊类型配置文件不存在 | 提示检查路径 `{baseDir}/.claude/skills/cnki-journals-fetcher/reference/journal-types-config.md` |
+| 期刊类型配置文件不存在 | 提示检查路径 `$CLAUDE_PROJECT_DIR/.claude/skills/lis-journals-fetcher/reference/journal-types-config.md` |
 | 期刊信息文件不存在 | 提示检查对应的期刊信息文件路径 |
 | Subagent 执行失败 | 显示错误信息，询问是否继续 |
 | 网络超时 | 重试 1 次，仍失败则跳过并记录 |
@@ -426,11 +426,11 @@ else:
 
 | 常量 | 值 |
 |------|-----|
-| 类型配置路径 | `{baseDir}/.claude/skills/lis-journals-fetcher/reference/journal-types-config.md` |
-| 期刊信息目录 | `{baseDir}/.claude/skills/lis-journals-fetcher/reference/journals-list/` |
-| 年期推荐策略 | `{baseDir}/.claude/skills/lis-journals-fetcher/reference/period-recommendation.md` |
-| 筛选脚本路径 | `{baseDir}/.claude/skills/lis-journals-fetcher/scripts/filter_papers.py` |
-| 结果输出路径 | `{baseDir}/outputs/{期刊名}/{年-期}.json` |
+| 类型配置路径 | `$CLAUDE_PROJECT_DIR/.claude/skills/lis-journals-fetcher/reference/journal-types-config.md` |
+| 期刊信息目录 | `$CLAUDE_PROJECT_DIR/.claude/skills/lis-journals-fetcher/reference/journals-list/` |
+| 年期推荐策略 | `$CLAUDE_PROJECT_DIR/.claude/skills/lis-journals-fetcher/reference/period-recommendation.md` |
+| 筛选脚本路径 | `$CLAUDE_PROJECT_DIR/.claude/skills/lis-journals-fetcher/scripts/filter_papers.py` |
+| 结果输出路径 | `$CLAUDE_PROJECT_DIR/outputs/{期刊名}/{年-期}.json` |
 | WPS 同步路径 | `CC-datas/lis-journals/{期刊名}/` （通过 wps-file-upload skill 自动处理） |
 | 超时时间 | 120000ms (2分钟) |
 

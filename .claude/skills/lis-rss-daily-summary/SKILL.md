@@ -12,18 +12,16 @@ user-invocable: true
 ### 步骤 1：调用脚本
 
 ```bash
-python {baseDir}/scripts/fetch-summary.py --save
+python $CLAUDE_PROJECT_DIR/.claude/skills/lis-rss-daily-summary/scripts/fetch-summary.py --save
 ```
 
-**路径说明**：
-- `{baseDir}` = 技能目录：`.claude/skills/lis-rss-daily-summary/`
-- 脚本完整路径：`.claude/skills/lis-rss-daily-summary/scripts/fetch-summary.py`
+> **路径规范**：使用 `$CLAUDE_PROJECT_DIR` 环境变量，确保跨工作目录的可靠路径解析。
 
 ### 步骤 2：处理响应
 
 | 状态 | 动作 |
 |------|------|
-| `success` | 已保存 markdown 到 `{projectRoot}/outputs/rss/daily-summary-YYYY-MM-DD.md` |
+| `success` | 已保存 markdown 到 `$CLAUDE_PROJECT_DIR/outputs/rss/daily-summary-YYYY-MM-DD.md` |
 | `empty` | **询问用户**是否查询其他日期 |
 | `error` | 查阅 [troubleshooting.md](references/troubleshooting.md) |
 
@@ -31,7 +29,7 @@ python {baseDir}/scripts/fetch-summary.py --save
 
 ```python
 # 获取脚本返回的本地文件路径
-local_file = "{projectRoot}/outputs/rss/daily-summary-YYYY-MM-DD.md"
+local_file = "$CLAUDE_PROJECT_DIR/outputs/rss/daily-summary-YYYY-MM-DD.md"
 
 # 调用 wps-file-upload skill 上传到 CC-datas/rss 目录
 wps_upload_result = Skill(
@@ -104,7 +102,7 @@ API 调用成功！但当日（2026-02-13）暂无新文章。
 | `--save`, `-s` | 保存为 markdown 文件 |
 | `--date` | 指定日期 YYYY-MM-DD |
 | `--limit` | 文章数量限制（默认 30） |
-| `--output-dir`, `-o` | 自定义输出目录（默认：`{projectRoot}/outputs/rss`） |
+| `--output-dir`, `-o` | 自定义输出目录（默认：`$CLAUDE_PROJECT_DIR/outputs/rss`） |
 | `--json` | 输出纯 JSON（调试用） |
 
 ---

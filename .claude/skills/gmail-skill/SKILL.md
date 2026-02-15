@@ -8,11 +8,12 @@ allowed-tools: "Read, Edit, Write, Bash, Glob, Grep, AskUserQuestion, Task"
 读取、搜索和删除 Gmail 电子邮件，访问 Google 联系人。
 
 ## 命令
-> {baseDir} 为项目根目录
+
+> **路径规范**：使用 `$CLAUDE_PROJECT_DIR` 环境变量，确保跨工作目录的可靠路径解析。
 
 ### 搜索电子邮件
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py search "查询语句" [--max-results 数量] [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py search "查询语句" [--max-results 数量] [--account 邮箱地址]
 ```
 
 **查询示例：**
@@ -24,7 +25,7 @@ python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py search "查�
 
 ### 读取电子邮件
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py read 邮件ID [--output 文件路径] [--format full|minimal] [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py read 邮件ID [--output 文件路径] [--format full|minimal] [--account 邮箱地址]
 ```
 
 **参数说明：**
@@ -34,46 +35,46 @@ python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py read 邮件ID
 **示例：**
 ```bash
 # 输出到终端（默认）
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py read 18d5a3b2c1f4e5d6
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py read 18d5a3b2c1f4e5d6
 
 # 直接保存到文件（推荐）
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py read 18d5a3b2c1f4e5d6 --output temp_emails/email_1.json
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py read 18d5a3b2c1f4e5d6 --output temp_emails/email_1.json
 ```
 
 ### 列出最近的电子邮件
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py list [--max-results 数量] [--label 标签名] [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py list [--max-results 数量] [--label 标签名] [--account 邮箱地址]
 ```
 
 
 ### 标记为已读
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py mark-read 邮件ID [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py mark-read 邮件ID [--account 邮箱地址]
 ```
 
 ### 标记为未读
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py mark-unread 邮件ID [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py mark-unread 邮件ID [--account 邮箱地址]
 ```
 
 ### 标记为已处理（归档）
 将邮件从收件箱移除并归档。
 
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py mark-done 邮件ID [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py mark-done 邮件ID [--account 邮箱地址]
 ```
 
 ### 取消归档
 将邮件移回收件箱（撤销归档操作）。
 
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py unarchive 邮件ID [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py unarchive 邮件ID [--account 邮箱地址]
 ```
 
 ### 标星 / 取消标星
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py star 邮件ID [--account 邮箱地址]
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py unstar 邮件ID [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py star 邮件ID [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py unstar 邮件ID [--account 邮箱地址]
 ```
 
 ### 移到垃圾箱 / 恢复
@@ -81,10 +82,10 @@ python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py unstar 邮件
 
 ```bash
 # 移到垃圾箱（推荐 - 可恢复）
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py trash 邮件ID [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py trash 邮件ID [--account 邮箱地址]
 
 # 从垃圾箱恢复
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py untrash 邮件ID [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py untrash 邮件ID [--account 邮箱地址]
 ```
 
 ### 永久删除
@@ -92,7 +93,7 @@ python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py untrash 邮�
 
 ```bash
 # 永久删除（不可逆）
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py delete 邮件ID [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py delete 邮件ID [--account 邮箱地址]
 ```
 
 **建议**：优先使用 `trash` 命令移到垃圾箱，确认不再需要后再手动从垃圾箱永久删除。
@@ -100,31 +101,31 @@ python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py delete 邮件
 ### 批量操作提示
 标记类命令（`mark-read`、`mark-unread`、`mark-done`、`unarchive`、`star`、`unstar`、`trash`、`untrash`、`delete`）均支持多个 ID（逗号分隔）：
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py mark-read "id1,id2,id3" --account user@gmail.com
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py mark-read "id1,id2,id3" --account user@gmail.com
 ```
 
 ### 列出标签
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py labels [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py labels [--account 邮箱地址]
 ```
 
 ### 列出联系人
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py contacts [--max-results 数量] [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py contacts [--max-results 数量] [--account 邮箱地址]
 ```
 
 ### 搜索联系人
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py search-contacts "查询语句" [--account 邮箱地址]
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py search-contacts "查询语句" [--account 邮箱地址]
 ```
 
 ### 账户管理
 ```bash
 # 列出所有已认证的账户
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py accounts
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py accounts
 
 # 移除指定账户
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py logout --account user@gmail.com
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py logout --account user@gmail.com
 ```
 
 ## 多账户支持
@@ -132,38 +133,38 @@ python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py logout --acco
 
 ```bash
 # 第一个账户（自动认证）
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py list
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py list
 
 # 添加工作账户
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py list --account work@company.com
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py list --account work@company.com
 
 # 添加个人账户
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py list --account personal@gmail.com
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py list --account personal@gmail.com
 
 # 使用指定账户操作
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py search "from:boss" --account work@company.com
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py search "from:boss" --account work@company.com
 ```
 
 ## 示例
 
 ### 查找本周的未读邮件
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py search "is:unread after:2026/01/01"
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py search "is:unread after:2026/01/01"
 ```
 
 ### 读取指定邮件
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py read 18d5a3b2c1f4e5d6
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py read 18d5a3b2c1f4e5d6
 ```
 
 ### 查找某人的联系信息
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py search-contacts "张三"
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py search-contacts "张三"
 ```
 
 ### 在个人设备上查看工作邮箱
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py list --account work@company.com --max-results 5
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py list --account work@company.com --max-results 5
 ```
 
 ## 输出格式
@@ -175,16 +176,16 @@ python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py list --accoun
 **重要提示**：`read` 命令**不支持**逗号分隔的多个邮件ID。读取多封邮件时，应使用多个独立的 Bash 工具调用并行执行：
 
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py read "id1"
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py read "id1"
 ```
 
 ```bash
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py read "id2"
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py read "id2"
 ```
 
 ```bash
 # 错误方式：会提示"无效的ID值"
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py read "id1,id2,id3"
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py read "id1,id2,id3"
 ```
 
 ### 处理大体积邮件内容
@@ -205,18 +206,18 @@ python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py read "id1,id2
 **示例：**
 ```bash
 # 查询指定日期的邮件（推荐）
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py search \
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py search \
     "from:scholaralerts-noreply@google.com" \
     --date-range "2026-02-04"
 
 # 查询日期范围
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py search \
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py search \
     "from:john@example.com" \
     --date-start "2026-02-01" \
     --date-end "2026-02-05"
 
 # 相对时间查询（不受时区影响）
-python {baseDir}/.claude/skills/gmail-skill/scripts/gmail_skill.py search \
+python $CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/scripts/gmail_skill.py search \
     "from:alert@example.com newer_than:7d"
 ```
 
@@ -237,4 +238,4 @@ Gmail 原生的日期搜索运算符：
 
 ## 安全说明
 - **发送确认要求** - Claude 发送邮件前必须始终向用户确认
-- 令牌本地存储在 `{baseDir}/.claude/skills/gmail-skill/tokens/` 目录
+- 令牌本地存储在 `$CLAUDE_PROJECT_DIR/.claude/skills/gmail-skill/tokens/` 目录

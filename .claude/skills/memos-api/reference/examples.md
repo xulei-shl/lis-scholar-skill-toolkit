@@ -8,10 +8,10 @@ Common workflows and advanced usage patterns for the Memos API.
 
 ```bash
 # Capture a quick idea
-python {baseDir}/scripts/memos_client.py create "#idea 💡 Integrate Memos with Claude Code"
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py create "#idea 💡 Integrate Memos with Claude Code"
 
 # Later, review all ideas
-python {baseDir}/scripts/memos_client.py tag idea
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py tag idea
 ```
 
 ## Daily Planning Workflow
@@ -20,7 +20,7 @@ python {baseDir}/scripts/memos_client.py tag idea
 
 ```bash
 # Create daily plan
-python {baseDir}/scripts/memos_client.py create "#daily $(date +%Y-%m-%d)
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py create "#daily $(date +%Y-%m-%d)
 
 ## Today's Focus
 1. Complete feature X
@@ -28,7 +28,7 @@ python {baseDir}/scripts/memos_client.py create "#daily $(date +%Y-%m-%d)
 3. Documentation updates"
 
 # Mark as completed at end of day
-python {baseDir}/scripts/memos_client.py update memos/XYZ123 "#daily $(date +%Y-%m-%d)
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py update memos/XYZ123 "#daily $(date +%Y-%m-%d)
 
 ## Today's Focus ✅ Completed
 1. Complete feature X ✅
@@ -42,7 +42,7 @@ python {baseDir}/scripts/memos_client.py update memos/XYZ123 "#daily $(date +%Y-
 
 ```bash
 # Create research note with multiple tags
-python {baseDir}/scripts/memos_client.py create "#research #AI #paper
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py create "#research #AI #paper
 
 ## Paper: Attention Is All You Need
 
@@ -54,14 +54,14 @@ python {baseDir}/scripts/memos_client.py create "#research #AI #paper
 **Next steps:** Experiment with transformer architecture"
 
 # Find all research notes
-python {baseDir}/scripts/memos_client.py tag research
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py tag research
 ```
 
 ## Meeting Notes Template
 
 ```bash
 # Create meeting notes
-python {baseDir}/scripts/memos_client.py create "#meeting #team
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py create "#meeting #team
 
 ## Weekly Sync - $(date +%Y-%m-%d)
 
@@ -88,7 +88,7 @@ $(date -d '+7 days' +%Y-%m-%d)"
 
 ```bash
 # Add reading note
-python {baseDir}/scripts/memos_client.py create "#reading #fiction
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py create "#reading #fiction
 
 ## Book: The Great Gatsby
 
@@ -121,7 +121,7 @@ notes = notes_file.read_text().split("---")
 for note in notes:
     if note.strip():
         subprocess.run([
-            "python", ".claude/skills/memos-api/scripts/memos_client.py",
+            "python", "$CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py",
             "create", note.strip()
         ])
 ```
@@ -135,7 +135,7 @@ import json
 import re
 
 result = subprocess.run(
-    ["python", ".claude/skills/memos-api/scripts/memos_client.py",
+    ["python", "$CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py",
      "list", "--limit", "1000", "--json"],
     capture_output=True, text=True
 )
@@ -158,10 +158,10 @@ for tag, count in sorted(tags.items(), key=lambda x: x[1], reverse=True):
 
 ```bash
 # Get memos as JSON for further processing
-python {baseDir}/scripts/memos_client.py search "Python" --json > results.json
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py search "Python" --json > results.json
 
 # Process with jq
-python {baseDir}/scripts/memos_client.py list --json | jq '.[] | .name'
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py list --json | jq '.[] | .name'
 ```
 
 ## Archiving Old Memos
@@ -176,7 +176,7 @@ cutoff_date = datetime.now() - timedelta(days=30)
 
 # Get all memos
 result = subprocess.run(
-    ["python", ".claude/skills/memos-api/scripts/memos_client.py",
+    ["python", "$CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py",
      "list", "--limit", "1000", "--json"],
     capture_output=True, text=True
 )
@@ -189,7 +189,7 @@ for memo in memos:
         # Add #archive tag
         new_content = memo['content'] + "\n\n#archive"
         subprocess.run([
-            "python", ".claude/skills/memos-api/scripts/memos_client.py",
+            "python", "$CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py",
             "update", memo['name'], new_content
         ])
         print(f"Archived: {memo['name']}")
@@ -215,7 +215,7 @@ for memo in memos:
 
 ```bash
 # Create memo from markdown file
-cat note.md | python {baseDir}/scripts/memos_client.py create "$(cat -)"
+cat note.md | python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py create "$(cat -)"
 ```
 
 ### With Cron (Scheduled Tasks)
@@ -229,6 +229,6 @@ cat note.md | python {baseDir}/scripts/memos_client.py create "$(cat -)"
 
 ```bash
 # Interactive memo selector
-memo_name=$(python {baseDir}/scripts/memos_client.py list --json | jq -r '.[].name' | fzf)
-python {baseDir}/scripts/memos_client.py get "$memo_name"
+memo_name=$(python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py list --json | jq -r '.[].name' | fzf)
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py get "$memo_name"
 ```

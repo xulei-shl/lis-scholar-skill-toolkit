@@ -87,7 +87,7 @@ allowed-tools: "Read, Edit, Write, Bash, Glob, Grep, AskUserQuestion, Task"
 
 4. **提取关键词**
    ```bash
-   python {baseDir}/.claude/skills/memory-updater/scripts/extract_keywords.py \
+   python $CLAUDE_PROJECT_DIR/.claude/skills/memory-updater/scripts/extract_keywords.py \
      outputs/{期刊名}/{年-期}.json
    ```
 
@@ -147,7 +147,7 @@ allowed-tools: "Read, Edit, Write, Bash, Glob, Grep, AskUserQuestion, Task"
 
 3. **提取排除关键词**
    ```bash
-   python {baseDir}/.claude/skills/memory-updater/scripts/extract_exclude_keywords.py \
+   python $CLAUDE_PROJECT_DIR/.claude/skills/memory-updater/scripts/extract_exclude_keywords.py \
      outputs/{期刊名}/{年-期}.json
    ```
 
@@ -167,7 +167,7 @@ allowed-tools: "Read, Edit, Write, Bash, Glob, Grep, AskUserQuestion, Task"
 ### 1. 读取 MEMORY.md，解析现有关键词
 
 ```bash
-Read {baseDir}/MEMORY.md
+Read $CLAUDE_PROJECT_DIR/MEMORY.md
 ```
 
 提取"关注主题词"行，解析关键词列表：
@@ -230,7 +230,7 @@ Read {baseDir}/MEMORY.md
 
 **更新格式示例**：
 ```markdown
-- 关注主题词：知识组织、信息组织、资源描述、元数据、资源编目、馆藏资源管理、智慧图书馆、图书馆服务平台、图书馆系统、AI应用研究、大模型、智能体（Agent）、检索增强生成（RAG）、知识图谱、智能客服、知识问答  # 更新于 2025-02-01
+- 关注主题词：知识组织，信息组织，资源描述，元数据，资源编目，馆藏资源管理，智慧图书馆，图书馆服务平台，图书馆系统，AI应用研究，大模型，智能体（Agent），检索增强生成（RAG），知识图谱，智能客服，知识问答  # 更新于 2025-02-01
 ```
 
 ### 6. 显示结果总结
@@ -250,7 +250,7 @@ Read {baseDir}/MEMORY.md
 ✅ 新增关键词:
   智能客服、知识问答、数字人文
 
-📁 已更新: {baseDir}/MEMORY.md
+📁 已更新: $CLAUDE_PROJECT_DIR/MEMORY.md
 ```
 
 ---
@@ -262,7 +262,7 @@ Read {baseDir}/MEMORY.md
 ### 1. 读取 MEMORY.md，解析现有排除关键词
 
 ```bash
-Read {baseDir}/MEMORY.md
+Read $CLAUDE_PROJECT_DIR/MEMORY.md
 ```
 
 提取"排除关键词"行（如果不存在，创建新行）：
@@ -273,7 +273,7 @@ Read {baseDir}/MEMORY.md
 ### 2. 运行提取脚本
 
 ```bash
-python {baseDir}/.claude/skills/memory-updater/scripts/extract_exclude_keywords.py \
+python $CLAUDE_PROJECT_DIR/.claude/skills/memory-updater/scripts/extract_exclude_keywords.py \
   outputs/{期刊名}/{年-期}.json
 ```
 
@@ -286,7 +286,7 @@ python {baseDir}/.claude/skills/memory-updater/scripts/extract_exclude_keywords.
 
 发现 5 篇误判论文（AI 标记为相关，但用户改为不相关）
 
-📊 候选排除关键词（频率 >= 1）：
+📊 候选排除关键词（频率 >= 1）:
 
 排名 | 频次 | 关键词
 -----
@@ -329,7 +329,7 @@ python {baseDir}/.claude/skills/memory-updater/scripts/extract_exclude_keywords.
 ✅ 新增排除关键词:
   城乡服务一体化
 
-📁 已更新: {baseDir}/MEMORY.md
+📁 已更新: $CLAUDE_PROJECT_DIR/MEMORY.md
 ```
 
 ---
@@ -351,10 +351,10 @@ python {baseDir}/.claude/skills/memory-updater/scripts/extract_exclude_keywords.
 
 | 常量 | 值 |
 |------|-----|
-| MEMORY.md 路径 | `{baseDir}/MEMORY.md` |
-| 提取脚本路径 | `{baseDir}/.claude/skills/memory-updater/scripts/extract_keywords.py` |
-| 排除词提取脚本 | `{baseDir}/.claude/skills/memory-updater/scripts/extract_exclude_keywords.py` |
-| 数据目录 | `{baseDir}/outputs/` |
+| MEMORY.md 路径 | `$CLAUDE_PROJECT_DIR/MEMORY.md` |
+| 提取脚本路径 | `$CLAUDE_PROJECT_DIR/.claude/skills/memory-updater/scripts/extract_keywords.py` |
+| 排除词提取脚本 | `$CLAUDE_PROJECT_DIR/.claude/skills/memory-updater/scripts/extract_exclude_keywords.py` |
+| 数据目录 | `$CLAUDE_PROJECT_DIR/outputs/` |
 | 默认期数（模式 B） | 2 |
 
 ## 外部调用

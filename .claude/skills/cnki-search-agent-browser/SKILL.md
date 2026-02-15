@@ -13,19 +13,17 @@ allowed-tools: "Read, Edit, Write, Bash, Glob, Grep, AskUserQuestion, Task"
 | 组件 | 类型 | 角色 | 文件位置 |
 |------|------|------|----------|
 | `agent-browser` | Skill | 浏览器自动化工具 | `.claude\skills\agent-browser\SKILL.md` |
-| `cnki-*.sh` | Script | CNKI 操作脚本 | `{baseDir}/scripts/` |
+| `cnki-*.sh` | Script | CNKI 操作脚本 | `$CLAUDE_PROJECT_DIR/.claude/skills/cnki-search-agent-browser/scripts/` |
 | `wps-file-upload` | Skill | WPS 云盘上传 | `.claude/skills/wps-file-upload/SKILL.md` |
 
 ## 输出路径规范
 
 | 输出类型 | 路径 | 说明 |
 |----------|------|------|
-| 检索结果 | `{projectRoot}/outputs/cnki-search/` | JSON + Markdown 格式 |
+| 检索结果 | `$CLAUDE_PROJECT_DIR/outputs/cnki-search/` | JSON + Markdown 格式 |
 | WPS 云盘 | `CC-datas/cnki-search/` | 自动上传同步 |
 
-**路径变量说明**：
-- `{baseDir}` = 当前技能目录 = `.claude/skills/cnki-search-agent-browser/`
-- `{projectRoot}` = 项目根目录 = `f:\Github\lis-scholar-skill-toolkit/`
+> **路径规范**：使用 `$CLAUDE_PROJECT_DIR` 环境变量，确保跨工作目录的可靠路径解析。
 
 ```mermaid
 flowchart TD
@@ -185,8 +183,8 @@ fi
 "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
 
 # 2. 修改脚本命令，添加 --cdp 参数
-cd {baseDir}/scripts
-bash cnki-search.sh "关键词" 15 {projectRoot}/outputs/cnki-search --cdp 9222
+cd $CLAUDE_PROJECT_DIR/.claude/skills/cnki-search-agent-browser/scripts
+bash cnki-search.sh "关键词" 15 $CLAUDE_PROJECT_DIR/outputs/cnki-search --cdp 9222
 ```
 
 #### 备选方案 B：连接现有浏览器
@@ -211,7 +209,7 @@ npx agent-browser session list
 ##### 方式 1：使用环境自适应包装脚本（推荐）
 
 ```bash
-cd {baseDir}/scripts
+cd $CLAUDE_PROJECT_DIR/.claude/skills/cnki-search-agent-browser/scripts
 # 包装脚本会自动检测环境并选择合适的执行方式
 bash cnki-search-wrapper.sh cnki-search.sh "关键词" 15
 bash cnki-search-wrapper.sh cnki-adv-search.sh "AI 伦理" -s 2022 -e 2025 -c -n 20
@@ -227,12 +225,12 @@ bash cnki-search-wrapper.sh cnki-adv-search.sh "AI 伦理" -s 2022 -e 2025 -c -n
 
 ```bash
 # Linux 无图形界面环境（手动使用 xvfb-run）
-cd {baseDir}/scripts
-xvfb-run -a bash cnki-search.sh "关键词" 15 {projectRoot}/outputs/cnki-search
+cd $CLAUDE_PROJECT_DIR/.claude/skills/cnki-search-agent-browser/scripts
+xvfb-run -a bash cnki-search.sh "关键词" 15 $CLAUDE_PROJECT_DIR/outputs/cnki-search
 
 # 有图形界面环境（Windows/macOS/Linux Desktop）
-cd {baseDir}/scripts
-bash cnki-search.sh "关键词" 15 {projectRoot}/outputs/cnki-search
+cd $CLAUDE_PROJECT_DIR/.claude/skills/cnki-search-agent-browser/scripts
+bash cnki-search.sh "关键词" 15 $CLAUDE_PROJECT_DIR/outputs/cnki-search
 ```
 
 **完成后展示结果摘要**：
@@ -255,7 +253,7 @@ bash cnki-search.sh "关键词" 15 {projectRoot}/outputs/cnki-search
 
 ### 结果文件处理
 
-脚本执行完成后，会将结果保存到 `{projectRoot}/outputs/cnki-search/` 目录：
+脚本执行完成后，会将结果保存到 `$CLAUDE_PROJECT_DIR/outputs/cnki-search/` 目录：
 
 **输出文件格式**：
 
@@ -270,7 +268,7 @@ bash cnki-search.sh "关键词" 15 {projectRoot}/outputs/cnki-search
 from pathlib import Path
 
 # 输出目录配置
-output_dir = Path("{projectRoot}") / "outputs" / "cnki-search"
+output_dir = Path("$CLAUDE_PROJECT_DIR") / "outputs" / "cnki-search"
 output_dir.mkdir(parents=True, exist_ok=True)
 
 # 获取脚本输出的 Markdown 文件（匹配关键词和时间戳）
@@ -302,8 +300,8 @@ if md_files:
 
 **状态文件位置说明**：
 
-- 状态文件位于 `{projectRoot}/outputs/.cnki_state.json`
-- 使用 `Bash cat {projectRoot}/outputs/.cnki_state.json` 读取
+- 状态文件位于 `$CLAUDE_PROJECT_DIR/outputs/.cnki_state.json`
+- 使用 `Bash cat $CLAUDE_PROJECT_DIR/outputs/.cnki_state.json` 读取
 
 **状态文件格式**：
 ```json
@@ -319,7 +317,7 @@ if md_files:
 **参数计算逻辑**（从状态文件读取）：
 ```bash
 # 1. 使用 Bash 工具读取状态文件
-Bash cat {projectRoot}/outputs/.cnki_state.json
+Bash cat $CLAUDE_PROJECT_DIR/outputs/.cnki_state.json
 
 # 2. 从输出中提取必要信息
 EXISTING_COUNT=10   # 从 .total_collected 获取
@@ -343,8 +341,8 @@ START_IDX=$((EXISTING_COUNT + 1))                      # 11
 # 已爬取10篇，每页20条，继续爬30篇
 # Skill 从状态文件读取: total_collected=10, current_page=1, items_per_page=20
 # Skill 计算: target_page=1, skip_in_page=10, start_idx=11
-cd {baseDir}/scripts
-bash cnki-crawl.sh cnki {projectRoot}/outputs/cnki-search "关键词" \
+cd $CLAUDE_PROJECT_DIR/.claude/skills/cnki-search-agent-browser/scripts
+bash cnki-crawl.sh cnki $CLAUDE_PROJECT_DIR/outputs/cnki-search "关键词" \
   --target-page 1 \
   --skip-in-page 10 \
   --count 30 \
@@ -378,7 +376,7 @@ npx agent-browser session list
 
 ```bash
 # 清理状态文件
-rm -f "{projectRoot}/outputs/.cnki_state.json" 2>/dev/null || true
+rm -f "$CLAUDE_PROJECT_DIR/outputs/.cnki_state.json" 2>/dev/null || true
 
 # 清理残留的 socket 文件（Windows 兼容）
 rm -f "$HOME/.agent-browser/"*.sock 2>/dev/null || true

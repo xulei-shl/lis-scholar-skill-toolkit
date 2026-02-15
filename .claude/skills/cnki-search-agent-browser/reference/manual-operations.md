@@ -1,6 +1,6 @@
-# CNKI 手动操作参考文档
+# CNKI Manual Operations Reference
 
-> **说明**：本文档保留用于**调试和故障排查**。日常使用请优先参考主文档中的[脚本化批量爬取方案]({baseDir}/.claude/skills/cnki/SKILL.md#26-脚本化批量爬取推荐)。
+> **Note**: This document is reserved for **debugging and troubleshooting**. For daily use, please prioritize the [scripted batch crawling solution]($CLAUDE_PROJECT_DIR/.claude/skills/cnki-search-agent-browser/SKILL.md) in the main documentation.
 
 ## 适用场景
 
@@ -124,18 +124,18 @@ npx agent-browser --session cnki --headed wait --load networkidle --timeout 6000
 }))
 ```
 
-## 手动保存到 Markdown
+## Manual Save to Markdown
 
-### 基础保存方式
+### Basic Save Method
 
 ```bash
-# 创建输出目录
-mkdir -p {baseDir}/outputs
+# Create output directory
+mkdir -p $CLAUDE_PROJECT_DIR/outputs
 
-# 设置输出文件名
-OUTPUT_FILE="{baseDir}/outputs/检索关键词-$(date +%Y%m%d).md"
+# Set output filename
+OUTPUT_FILE="$CLAUDE_PROJECT_DIR/outputs/检索关键词-$(date +%Y%m%d).md"
 
-# 写入 Markdown 头部
+# Write Markdown header
 echo "# CNKI 检索结果：检索关键词" > "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 echo "**检索日期**: $(date +%Y-%m-%d)" >> "$OUTPUT_FILE"
@@ -143,20 +143,20 @@ echo "**检索关键词**: 检索关键词" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 echo "## 第1页" >> "$OUTPUT_FILE"
 
-# 提取结果并追加到文件
+# Extract results and append to file
 npx agent-browser --session cnki --headed eval "
   [...document.querySelectorAll('tbody tr')].map((r,i)=>(
     \`\${i+1}. \${r.querySelector('.name a')?.textContent}\`
-  })).join('\\n')
+  )).join('\n')
 " >> "$OUTPUT_FILE"
 ```
 
-### 带表格格式保存
+### Save with Table Format
 
 ```bash
-OUTPUT_FILE="{baseDir}/outputs/检索关键词-$(date +%Y%m%d).md"
+OUTPUT_FILE="$CLAUDE_PROJECT_DIR/outputs/检索关键词-$(date +%Y%m%d).md"
 
-# 写入 Markdown 头部和表格
+# Write Markdown header and table
 cat > "$OUTPUT_FILE" << EOF
 # CNKI 检索结果：检索关键词
 
@@ -167,7 +167,7 @@ cat > "$OUTPUT_FILE" << EOF
 |------|------|------|------|----------|
 EOF
 
-# 提取并追加结果
+# Extract and append results
 npx agent-browser --session cnki --headed eval "
   [...document.querySelectorAll('tbody tr')].map((r, i) => {
     const title = r.querySelector('.name a')?.textContent?.trim() || 'N/A';
@@ -175,30 +175,30 @@ npx agent-browser --session cnki --headed eval "
     const source = r.querySelector('td:nth-child(4)')?.textContent?.trim() || 'N/A';
     const date = r.querySelector('td:nth-child(5)')?.textContent?.trim() || 'N/A';
     return \`| \${i+1} | \${title} | \${author} | \${source} | \${date} |\`;
-  }).join('\\n')
+  }).join('\n')
 " >> "$OUTPUT_FILE"
 ```
 
-### 多页保存示例
+### Multi-page Save Example
 
 ```bash
-OUTPUT_FILE="{baseDir}/outputs/检索关键词-$(date +%Y%m%d).md"
+OUTPUT_FILE="$CLAUDE_PROJECT_DIR/outputs/检索关键词-$(date +%Y%m%d).md"
 
-# 初始化文件
+# Initialize file
 echo "# CNKI 检索结果" > "$OUTPUT_FILE"
 echo "**检索日期**: $(date +%Y-%m-%d)" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
-# 循环爬取3页
+# Loop through 3 pages
 for page in {1..3}; do
     echo "## 第${page}页" >> "$OUTPUT_FILE"
     echo "" >> "$OUTPUT_FILE"
 
-    # 提取当前页
+    # Extract current page
     npx agent-browser --session cnki --headed eval "..." >> "$OUTPUT_FILE"
     echo "" >> "$OUTPUT_FILE"
 
-    # 翻页（如果不是最后一页）
+    # Page (if not last page)
     if [ $page -lt 3 ]; then
         npx agent-browser --session cnki --headed snapshot -i | grep "下一页"
         npx agent-browser --session cnki --headed click @e100
@@ -208,11 +208,11 @@ for page in {1..3}; do
 done
 ```
 
-## 并行多页爬取（高级）
+## Parallel Multi-page Crawling (Advanced)
 
-> **注意**：此方法较为复杂，仅在需要爬取大量结果（>60篇）时使用。日常场景请使用[脚本化方案]({baseDir}/.claude/skills/cnki/SKILL.md#26-脚本化批量爬取推荐)。
+> **Note**: This method is relatively complex and should only be used when crawling large numbers of results (>60). For daily scenarios, please use the [scripted solution]($CLAUDE_PROJECT_DIR/.claude/skills/cnki-search-agent-browser/SKILL.md).
 
-### 使用 Session 并行
+### Using Session Parallel
 
 ```bash
 # 启动 3 个并行 session（后台执行）

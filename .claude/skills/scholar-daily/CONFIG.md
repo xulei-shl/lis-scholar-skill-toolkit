@@ -5,15 +5,15 @@
 | 常量 | 值 | 说明 |
 |------|-----|------|
 | 邮件发件人 | `scholaralerts-noreply@google.com` | Google Scholar Alert 发件人 |
-| 临时目录 | `{baseDir}/outputs/temps/` | 存放临时邮件和解析文件 |
-| 报告目录 | `{baseDir}/outputs/scholar-reports/` | 生成的日报存放位置 |
+| 临时目录 | `$CLAUDE_PROJECT_DIR/outputs/temps/` | 存放临时邮件和解析文件 |
+| 报告目录 | `$CLAUDE_PROJECT_DIR/outputs/scholar-reports/` | 生成的日报存放位置 |
 | 报告同步目录 | `C:\Users\Administrator\WPSDrive\1568727350\WPS企业云盘\上海图书馆(上海科学技术情报研究所)\我的企业文档\CC-datas\gmail-daily` | 日报额外同步位置 |
-| MEMORY.md | `{baseDir}/MEMORY.md` | 用户研究兴趣配置（包含过滤规则） |
-| email_formatter | `{baseDir}/.claude/skills/scholar-daily-skill/scripts/email_formatter.py` | 邮件解析脚本 |
+| MEMORY.md | `$CLAUDE_PROJECT_DIR/MEMORY.md` | 用户研究兴趣配置（包含过滤规则） |
+| email_formatter | `$CLAUDE_PROJECT_DIR/.claude/skills/scholar-daily/scripts/email_formatter.py` | 邮件解析脚本 |
 
 ## 路径变量
 
-- `{baseDir}`: 项目根目录
+> **路径规范**：使用 `$CLAUDE_PROJECT_DIR` 环境变量，确保跨工作目录的可靠路径解析。
 
 ## Gmail 查询格式
 
@@ -64,8 +64,8 @@ next_date = (dt + timedelta(days=1)).strftime("%Y/%m/%d")  # 2026/2/5
 
 ## 过滤规则
 
-论文过滤规则定义在 `{baseDir}/MEMORY.md` 中，包括：
+论文过滤规则定义在 `$CLAUDE_PROJECT_DIR/MEMORY.md` 中，包括：
 
-- **学科领域**：图书馆学、信息资源组织
+- **学科领域**：图书馆学，信息资源组织
 - **关注主题词**：知识组织、元数据、大模型、RAG、知识图谱等
 - **排除关键词**：元宇宙、阅读推广、公共图书馆服务等

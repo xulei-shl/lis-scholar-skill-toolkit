@@ -34,7 +34,7 @@ pip install requests python-dotenv
 
 ### 2. Configure Connection
 
-Create configuration file at `{baseDir}/scripts/.env`:
+Create configuration file at `$CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/.env`:
 
 ```bash
 MEMOS_BASE_URL=https://your-memos-instance.com
@@ -50,7 +50,7 @@ MEMOS_ACCESS_TOKEN=memos_pat_your_token_here
 ### 3. Verify Configuration
 
 ```bash
-python {baseDir}/scripts/memos_client.py list
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py list
 ```
 
 If configured correctly, this will display your recent memos.
@@ -59,28 +59,28 @@ If configured correctly, this will display your recent memos.
 
 | Operation | Command | Output |
 |-----------|---------|--------|
-| **Create** | `python {baseDir}/scripts/memos_client.py create "#inbox Content"` | Memo name |
-| **Search** | `python {baseDir}/scripts/memos_client.py search "keyword"` | Matching memos |
-| **By tag** | `python {baseDir}/scripts/memos_client.py tag inbox` | Tagged memos |
-| **List** | `python {baseDir}/scripts/memos_client.py list --limit 10` | Recent memos |
-| **Get detail** | `python {baseDir}/scripts/memos_client.py get memos/xxx` | Full memo |
-| **Update** | `python {baseDir}/scripts/memos_client.py update memos/xxx "New"` | Updated memo |
-| **Delete** | `python {baseDir}/scripts/memos_client.py delete memos/xxx` | Confirmation |
+| **Create** | `python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py create "#inbox Content"` | Memo name |
+| **Search** | `python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py search "keyword"` | Matching memos |
+| **By tag** | `python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py tag inbox` | Tagged memos |
+| **List** | `python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py list --limit 10` | Recent memos |
+| **Get detail** | `python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py get memos/xxx` | Full memo |
+| **Update** | `python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py update memos/xxx "New"` | Updated memo |
+| **Delete** | `python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py delete memos/xxx` | Confirmation |
 
 ### Create Examples
 
 ```bash
 # Basic memo
-python {baseDir}/scripts/memos_client.py create "Simple note"
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py create "Simple note"
 
 # With tag (use #tag in content)
-python {baseDir}/scripts/memos_client.py create "#inbox Today's tasks"
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py create "#inbox Today's tasks"
 
 # With visibility
-python {baseDir}/scripts/memos_client.py create "Public note" --visibility PUBLIC
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py create "Public note" --visibility PUBLIC
 
 # Multi-line content
-python {baseDir}/scripts/memos_client.py create "#meeting
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py create "#meeting
 
 ## Attendees
 - Alice
@@ -94,13 +94,13 @@ Discussed Q1 planning"
 
 ```bash
 # By keyword
-python {baseDir}/scripts/memos_client.py search "Python"
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py search "Python"
 
 # By tag
-python {baseDir}/scripts/memos_client.py tag inbox
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py tag inbox
 
 # List with JSON output
-python {baseDir}/scripts/memos_client.py list --limit 20 --json
+python $CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py list --limit 20 --json
 ```
 
 ## Natural Language Triggers
@@ -182,7 +182,7 @@ Recent 5 memo(s):
 
 | Error | Cause | Solution |
 |-------|-------|----------|
-| `❌ Configuration error: MEMOS_BASE_URL and MEMOS_ACCESS_TOKEN required` | Missing .env file | Create `{baseDir}/scripts/.env` with both variables |
+| `❌ Configuration error: MEMOS_BASE_URL and MEMOS_ACCESS_TOKEN required` | Missing .env file | Create `$CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/.env` with both variables |
 | `❌ Authentication failed: Invalid access token` | Wrong token format | Verify token starts with `memos_pat_` |
 | `❌ Connection failed: Cannot reach ...` | Server unreachable | Check MEMOS_BASE_URL is accessible |
 | `❌ Not found: memos/xxx` | Invalid memo name | Use `list` command to find valid names |
@@ -197,7 +197,7 @@ Recent 5 memo(s):
 
 ### memos_client.py
 
-**Location:** `{baseDir}/scripts/memos_client.py`
+**Location:** `$CLAUDE_PROJECT_DIR/.claude/skills/memos-api/scripts/memos_client.py`
 
 **Usage:** `python memos_client.py <command> [options]`
 

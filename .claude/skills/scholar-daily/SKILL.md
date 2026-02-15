@@ -76,8 +76,7 @@ fi
 
 ```bash
 # 使用 --output 参数直接保存到 temps 目录
-{baseDir}="项目根目录"
-temps_dir="{baseDir}/outputs/temps"
+temps_dir="$CLAUDE_PROJECT_DIR/outputs/temps"
 
 # 强制规则：每个 gmail_skill.py 调用都必须包含代理设置和 --account 参数
 Bash(command=f"export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 && python3 .claude/skills/gmail-skill/scripts/gmail_skill.py read {id1} --account wzjlxy@gmail.com --output {temps_dir}/email_{id1}.json")
@@ -115,7 +114,7 @@ Task(
 
 任务:
 1. 读取 {temps_dir}/papers_{email_id}.json 获取论文列表
-2. 读取 {baseDir}/MEMORY.md 了解研究兴趣
+2. 读取 $CLAUDE_PROJECT_DIR/MEMORY.md 了解研究兴趣
 3. 对每篇论文进行语义过滤,判断相关度
 4. 返回 JSON 格式结果
 
@@ -162,7 +161,7 @@ relevant_papers.sort(key=lambda x: star_to_number(x.get("relevance_score", "★�
 完整模板见 [REFERENCE.md](REFERENCE.md#日报模板)。
 
 **保存路径**：
-- 主路径：`{baseDir}/outputs/scholar-reports/scholar-report-YYYY-MM-DD.md`（如冲突自动添加 `_1`, `_2` 后缀）
+- 主路径：`$CLAUDE_PROJECT_DIR/outputs/scholar-reports/scholar-report-YYYY-MM-DD.md`（如冲突自动添加 `_1`, `_2` 后缀）
 - WPS 云盘：上传到 `CC-datas/gmail-daily/` 目录（使用 wps-file-upload skill）
 
 ```python
@@ -181,7 +180,7 @@ def get_unique_path(filepath: Path) -> Path:
         counter += 1
 
 # 1. 保存到本地（自动创建目录，处理文件名冲突）
-report_dir = Path("{baseDir}") / "outputs" / "scholar-reports"
+report_dir = Path("$CLAUDE_PROJECT_DIR") / "outputs" / "scholar-reports"
 report_dir.mkdir(parents=True, exist_ok=True)
 local_path = report_dir / f"scholar-report-{date}.md"
 unique_local_path = get_unique_path(local_path)
