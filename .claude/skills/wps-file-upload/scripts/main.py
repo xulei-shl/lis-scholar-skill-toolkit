@@ -276,43 +276,20 @@ def cmd_token(args):
     token = token_data.get("token", {})
     obtained_at = token_data.get("_obtained_at", time.time())
 
-    print("\n" + "=" * 60)
-    print("Token 状态")
-    print("=" * 60)
-
-    # Access token
+    # 只输出简短状态，不输出详细信息
+    # （主agent调用时不需要这些详细日志）
     access_token = token.get("access_token", "")
-    expires_in = token.get("expires_in", 0)
     if access_token:
-        remaining = expires_in - (time.time() - obtained_at)
         is_expired = is_token_expired(token_data, "access")
         status = "已过期" if is_expired else "有效"
-        print(f"\nAccess Token: {status}")
-        print(f"  值: {access_token[:30]}...")
-        print(f"  有效期: {expires_in} 秒 (约 {expires_in // 3600} 小时)")
-        print(f"  剩余: 约 {int(remaining / 60)} 分钟")
+        print(f"Access Token: {status}")
 
-    # Refresh token
     refresh_token = token.get("refresh_token", "")
-    refresh_expires_in = token.get("refresh_expires_in", 0)
     if refresh_token:
-        remaining = refresh_expires_in - (time.time() - obtained_at)
         is_expired = is_token_expired(token_data, "refresh")
         status = "已过期" if is_expired else "有效"
-        print(f"\nRefresh Token: {status}")
-        print(f"  值: {refresh_token[:30]}...")
-        print(f"  有效期: {refresh_expires_in} 秒 (约 {refresh_expires_in // 86400} 天)")
-        print(f"  剩余: 约 {int(remaining / 86400)} 天")
+        print(f"Refresh Token: {status}")
 
-    # User info
-    user_info = token_data.get("user_info")
-    if user_info:
-        print(f"\n用户信息:")
-        print(f"  ID: {user_info.get('id', 'N/A')}")
-        print(f"  姓名: {user_info.get('name', 'N/A')}")
-        print(f"  邮箱: {user_info.get('email', 'N/A')}")
-
-    print("\n" + "=" * 60)
     return 0
 
 

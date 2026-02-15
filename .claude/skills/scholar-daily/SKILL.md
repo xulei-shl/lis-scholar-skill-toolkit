@@ -43,7 +43,7 @@ allowed-tools: "Read, Write, Bash, Skill, Task, AskUserQuestion"
 
 ## 工作流
 
-### Step 1: 解析日期并搜索邮件（⚠️ 强制：必须使用代理）
+### Step 1: 解析日期并搜索邮件
 
 ```bash
 # 强制规则：所有 Gmail API 调用必须通过代理（如 Clash Premium）
@@ -72,7 +72,7 @@ fi
 - ⚠️ **必须使用 python3**：脚本需要 Python 3 运行
 - ⚠️ **必须指定账户**：使用 `--account` 参数指定 Gmail 账户，避免认证错误
 
-### Step 2: 并行读取邮件（⚠️ 强制：必须使用代理 + python3）
+### Step 2: 并行读取邮件
 
 ```bash
 # 使用 --output 参数直接保存到 temps 目录
@@ -85,7 +85,7 @@ Bash(command=f"export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.
 # ... 所有邮件（在同一消息中并行调用）
 ```
 
-### Step 3: 并行解析论文（⚠️ 强制：必须使用 python3 + 正确路径）
+### Step 3: 并行解析论文
 
 ```bash
 # 并行调用 email_formatter.py
@@ -200,7 +200,7 @@ wps_upload_result = Skill(
 
 **错误处理**：如果 WPS 上传失败，仅记录警告，不影响日报生成完成状态。本地文件始终保存成功。
 
-### Step 7: 删除已处理邮件（⚠️ 强制：必须使用代理 + python3）
+### Step 7: 删除已处理邮件
 
 ```bash
 # 批量删除（使用逗号分隔多个 ID）

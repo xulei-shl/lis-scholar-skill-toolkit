@@ -461,7 +461,7 @@ def main():
         return 1
 
     access_token = token_data["token"]["access_token"]
-    print(f"使用 access_token: {access_token[:20]}...")
+    # print(f"使用 access_token: {access_token[:20]}...")  # 调试信息，注释
 
     # 解析命令行参数
     drive_id = None
@@ -475,29 +475,7 @@ def main():
     while i < len(sys.argv):
         arg = sys.argv[i]
         if arg == "--help" or arg == "-h":
-            print("上传文件到 WPS 云盘")
-            print("")
-            print("用法: python wps_upload.py [选项]")
-            print("")
-            print("选项:")
-            print("  --drive-id ID       指定盘ID（不指定则自动查找 special 盘）")
-            print("  --path PATH         目标文件夹路径，如: CC-datas/gmail-daily")
-            print("  --parent-id ID      直接指定父目录ID（与 --path 二选一）")
-            print("  --file FILE         本地文件路径（必须）")
-            print("  --conflict MODE     文件名冲突处理: fail/rename/overwrite/replace")
-            print("                      默认: rename")
-            print("  --create-path       如果路径不存在则自动创建")
-            print("  --help, -h          显示帮助信息")
-            print("")
-            print("示例:")
-            print("  # 上传到指定路径")
-            print("  python wps_upload.py --file test.docx --path CC-datas/gmail-daily")
-            print("")
-            print("  # 上传到指定目录ID")
-            print("  python wps_upload.py --file test.pdf --parent-id 123456")
-            print("")
-            print("  # 自动创建不存在的路径")
-            print("  python wps_upload.py --file data.xlsx --path reports/2024 --create-path")
+            # 帮助信息已注释，不输出
             return 0
         elif arg == "--drive-id" and i + 1 < len(sys.argv):
             drive_id = sys.argv[i + 1]
@@ -525,17 +503,18 @@ def main():
 
     # 查找 special 盘
     if not drive_id:
-        print("\n查找 source 为 'special' 的盘...")
+        # print("\n查找 source 为 'special' 的盘...")  # 进度日志，注释
         special_drive = find_special_drive(access_token)
         if special_drive:
             drive_id = special_drive.get("id")
             drive_name = special_drive.get("name", "N/A")
-            print(f"找到盘: {drive_name} (ID: {drive_id})")
+            # print(f"找到盘: {drive_name} (ID: {drive_id})")  # 进度日志，注释
         else:
             print("错误: 未找到 source 为 'special' 的盘")
             return 1
     else:
-        print(f"\n使用指定的盘 ID: {drive_id}")
+        # print(f"\n使用指定的盘 ID: {drive_id}")  # 进度日志，注释
+        pass
 
     try:
         result = upload_file(
