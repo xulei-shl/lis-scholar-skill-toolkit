@@ -23,6 +23,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 def ensure_valid_token():
     """
     确保获取有效的 access_token
+    当 token 无效时，自动触发重新授权流程
 
     Returns:
         tuple: (access_token, token_data)
@@ -32,69 +33,17 @@ def ensure_valid_token():
     Raises:
         Exception: 如果无法获取有效 token
     """
-    from wps_login import load_token, is_token_expired, refresh_access_token, save_token
+    from wps_login import get_valid_token, save_token
 
-    token_data = load_token()
-    if not token_data:
-        raise Exception("未找到 token 数据，请先运行: python main.py login")
+    # 使用 wps_login 的智能 token 管理函数
+    # 它会自动处理：有效检查、刷新、过期重新授权
+    token_data, is_new = get_valid_token(force_refresh=False, code=None)
 
-    # 检查 access_token 是否过期
-    if not is_token_expired(token_data, "access"):
-        logging.info("✓ Access token 有效")
-        return token_data["token"]["access_token"], token_data
+    # 如果是新获取或刷新的 token，保存到文件
+    if is_new:
+        save_token(token_data)
 
-    # access_token 过期，尝试刷新
-    logging.warning("⚠ Access token 已过期，尝试刷新...")
-
-    # 检查 refresh_token 是否过期
-    if is_token_expired(token_data, "refresh"):
-        raise Exception(
-            "Refresh token 也已过期，请重新登录授权:\n"
-            "  python main.py login"
-        )
-
-    try:
-        from wps_login import WPS_CONFIG
-        import requests
-
-        # 使用 refresh_token 刷新
-        refresh_token = token_data["token"]["refresh_token"]
-        token_url = WPS_CONFIG.get("token_url", "https://openapi.wps.cn/oauth2/token")
-
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        params = {
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
-            "client_id": WPS_CONFIG["client_id"],
-            "client_secret": WPS_CONFIG["client_secret"]
-        }
-
-        logging.info(f"刷新 token: {refresh_token[:20]}...")
-        response = requests.post(token_url, data=params, headers=headers)
-        result = response.json()
-
-        if response.status_code != 200:
-            raise Exception(f"刷新失败 (HTTP {response.status_code}): {result}")
-        if "code" in result and result["code"] != 0:
-            raise Exception(f"刷新失败: {result.get('msg', 'Unknown error')}")
-        if "error" in result:
-            raise Exception(f"刷新失败: {result.get('error_description', result['error'])}")
-
-        # 保存新 token（保留 user_info）
-        user_info = token_data.get("user_info")
-        new_token_data = {"token": result, "user_info": user_info}
-        save_token(new_token_data)
-
-        logging.info("✓ Token 刷新成功")
-        return result["access_token"], new_token_data
-
-    except Exception as e:
-        logging.error(f"✗ Token 刷新失败: {e}")
-        raise Exception(
-            f"Token 刷新失败，请重新登录授权:\n"
-            f"  python main.py login\n"
-            f"错误信息: {e}"
-        )
+    return token_data["token"]["access_token"], token_data
 
 
 def cmd_login(args):
