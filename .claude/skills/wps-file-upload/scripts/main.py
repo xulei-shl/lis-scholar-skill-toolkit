@@ -49,7 +49,16 @@ def ensure_valid_token():
 def cmd_login(args):
     """登录授权"""
     from wps_login import main as login_main
-    return login_main()
+    # 清空 sys.argv，避免 "login" 被当作授权码
+    original_argv = sys.argv
+    try:
+        sys.argv = ["wps_login.py"]
+        # 如果有 --force 参数则传递
+        if hasattr(args, 'force') and args.force:
+            sys.argv.append("--force")
+        return login_main()
+    finally:
+        sys.argv = original_argv
 
 
 def cmd_drives(args):
@@ -281,7 +290,9 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="可用命令")
 
     # login 命令
-    subparsers.add_parser("login", help="登录授权")
+    parser_login = subparsers.add_parser("login", help="登录授权")
+    parser_login.add_argument("--force", "-f", action="store_true",
+                              help="强制重新授权，忽略已保存的 token")
 
     # drives 命令
     parser_drives = subparsers.add_parser("drives", help="列出所有盘")

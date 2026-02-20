@@ -102,15 +102,29 @@ def load_token():
         return None
 
 def save_token(token_data):
-    """保存 token 到文件"""
+    """保存 token 到文件（原子写入）"""
+    import os
     token_path = get_token_file_path()
     # 记录获取时间戳（用于后续检查过期）
     save_data = {
         k: v for k, v in token_data.items() if not k.startswith("_")
     }
     save_data["_obtained_at"] = time.time()
-    with open(token_path, "w", encoding="utf-8") as f:
-        json.dump(save_data, f, indent=2, ensure_ascii=False)
+
+    # 原子写入：先写临时文件，再重命名
+    temp_path = str(token_path) + ".tmp"
+    try:
+        with open(temp_path, "w", encoding="utf-8") as f:
+            json.dump(save_data, f, indent=2, ensure_ascii=False)
+        # Windows 需要先删除目标文件
+        if os.path.exists(token_path):
+            os.remove(token_path)
+        os.rename(temp_path, token_path)
+    except Exception:
+        # 如果失败，清理临时文件
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+        raise
 
 def is_token_expired(token_data, token_type="access"):
     """检查 token 是否过期"""
@@ -183,6 +197,12 @@ def get_valid_token(force_refresh=False, code=None):
         print(f"✓ 刷新成功!")
         print(f"  新 Access Token: {new_token.get('access_token', '')[:20]}...")
         print(f"  有效期: {new_token.get('expires_in', 'Unknown')} 秒")
+        print(f"  新 Refresh Token: {new_token.get('refresh_token', '')[:20]}...")
+        print(f"  Refresh Token 有效期: {new_token.get('refresh_expires_in', 'N/A')} 秒")
+
+        # 检查刷新响应中是否包含 refresh_expires_in
+        if "refresh_expires_in" not in new_token:
+            print("⚠ 警告：刷新响应中缺少 refresh_expires_in 字段！")
 
         # 保存新 token（保留 user_info）
         user_info = token_data.get("user_info")
