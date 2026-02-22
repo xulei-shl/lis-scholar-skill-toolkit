@@ -17,7 +17,8 @@ POST /api/daily-summary/cli
 ```json
 {
   "date": "2025-02-11",    // 可选，默认今天
-  "limit": 30              // 可选，默认 30
+  "limit": 30,            // 可选，默认 30
+  "type": "journal"       // 可选，journal/blog_news
 }
 ```
 
@@ -27,6 +28,37 @@ POST /api/daily-summary/cli
 |------|------|------|--------|------|
 | `date` | string | 否 | 今天 | 日期格式 YYYY-MM-DD |
 | `limit` | number | 否 | 30 | 最多包含的文章数量 |
+| `type` | string | 否 | `null` | 总结类型：`journal`, `blog_news`，未指定则为综合 |
+
+### type 参数详解
+
+| 参数值 | 包含的源类型 | 说明 |
+|--------|-------------|------|
+| `journal` | `source_type = 'journal'` | 学术期刊论文（arXiv、Nature等） |
+| `blog_news` | `source_type IN ('blog', 'news')` | 技术博客和新闻资讯 |
+| 未指定 | 所有类型 | 综合总结（包含所有源类型） |
+
+**示例**：
+
+```bash
+# 仅获取期刊论文总结
+curl "http://localhost:8007/api/daily-summary/cli?user_id=1&api_key=mykey" \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"type": "journal", "limit": 30}'
+
+# 仅获取博客资讯总结
+curl "http://localhost:8007/api/daily-summary/cli?user_id=1&api_key=mykey" \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"type": "blog_news", "limit": 50}'
+
+# 获取综合总结（默认）
+curl "http://localhost:8007/api/daily-summary/cli?user_id=1&api_key=mykey" \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"limit": 30}'
+```
 
 ## 响应
 

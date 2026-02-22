@@ -38,7 +38,7 @@ def load_env_config():
 
 
 def fetch_summary(user_id: int, api_key: str, date: str = None, limit: int = 30,
-                  base_url: str = "http://10.40.92.18:8007"):
+                  base_url: str = "http://10.40.92.18:8007", summary_type: str = None):
     """获取每日汇总"""
     endpoint = f"{base_url}/api/daily-summary/cli"
     params = {"user_id": user_id, "api_key": api_key}
@@ -48,6 +48,8 @@ def fetch_summary(user_id: int, api_key: str, date: str = None, limit: int = 30,
         body["date"] = date
     if limit:
         body["limit"] = limit
+    if summary_type:
+        body["type"] = summary_type
 
     try:
         response = requests.post(endpoint, params=params, json=body, timeout=30)
@@ -156,10 +158,16 @@ def generate_markdown(result: dict) -> str:
     return "\n".join(md_lines)
 
 
-def save_markdown(content: str, date: str, output_dir: str = None):
+def save_markdown(content: str, date: str, output_dir: str = None, summary_type: str = None):
     """保存 markdown 文件"""
+    # 检查内容是否为空
     if not content:
         print(" 提示: 无内容可保存", file=sys.stderr)
+        return None
+
+    # 检查是否仅为空内容框架（文章数为0）
+    if "文章总数: 0" in content or '"totalArticles": 0' in content:
+        print(" 提示: 当日无文章，跳过保存", file=sys.stderr)
         return None
 
     # 确定输出目录
@@ -174,8 +182,14 @@ def save_markdown(content: str, date: str, output_dir: str = None):
     # 创建目录
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # 文件名
-    filename = f"daily-summary-{date}.md"
+    # 文件名（根据类型调整）
+    if summary_type == "journal":
+        filename = f"daily-summary-journal-{date}.md"
+    elif summary_type == "blog_news":
+        filename = f"daily-summary-blog-news-{date}.md"
+    else:
+        filename = f"daily-summary-{date}.md"
+
     filepath = output_dir / filename
 
     # 写入文件
@@ -205,6 +219,8 @@ def main():
   %(prog)s --json                     # JSON 输出
   %(prog)s --save                     # 保存为 markdown 文件
   %(prog)s -s -o ./docs               # 保存到指定目录
+  %(prog)s --type journal             # 仅生成期刊总结
+  %(prog)s --type blog_news           # 仅生成博客资讯总结
         """
     )
     parser.add_argument("--user-id", "-u", type=int, default=default_user_id,
@@ -215,6 +231,8 @@ def main():
     parser.add_argument("--limit", "-l", type=int, default=30, help="文章数量限制")
     parser.add_argument("--base-url", default=default_base_url,
                        help=f"服务地址 (默认: {default_base_url})")
+    parser.add_argument("--type", "-t", choices=["journal", "blog_news"],
+                       help="总结类型: journal=期刊, blog_news=博客+新闻")
     parser.add_argument("--json", action="store_true", help="输出纯 JSON")
     parser.add_argument("--pretty", "-p", action="store_true", help="美化输出")
     parser.add_argument("--save", "-s", action="store_true", help="保存为 markdown 文件")
@@ -236,7 +254,8 @@ def main():
         api_key=args.api_key,
         date=args.date,
         limit=args.limit,
-        base_url=args.base_url
+        base_url=args.base_url,
+        summary_type=args.type
     )
 
     if args.json:
@@ -248,7 +267,7 @@ def main():
         if args.save and result.get("status") == "success":
             md_content = generate_markdown(result)
             date = result.get("data", {}).get("date", "unknown")
-            filepath = save_markdown(md_content, date, args.output_dir)
+            filepath = save_markdown(md_content, date, args.output_dir, args.type)
             if filepath:
                 print(f"\n 已保存: {filepath}")
 
